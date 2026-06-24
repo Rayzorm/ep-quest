@@ -766,6 +766,61 @@ const UNITS = [
    ]},
   ]
  },
+ {
+  title:"Unit 8 · EP Business 💼", sub:"Who pays, and how you get paid", color:"var(--blue)", shadow:"var(--blue-d)", icon:"💼",
+  lessons:[
+   { title:"Who pays for EP?", icon:"💰", qs:[
+     {type:"info", kind:"EP Business", title:"The funding streams", body:"As an <b>Accredited Exercise Physiologist (AEP)</b> in Australia, your work can be funded through several streams: <b>Medicare</b> (chronic disease plans), <b>NDIS</b>, <b>DVA</b> (veterans), <b>private health</b> insurance (extras), <b>workers comp / CTP</b> (injury), and private self-funded clients. Building a caseload means mixing these. <i>(Rules, item numbers and rebates change — always verify current details with ESSA, Services Australia and the NDIS.)</i>"},
+     {type:"mc", kind:"EP Business", q:"AEPs are accredited by which body?",
+      options:["ESSA (Exercise & Sports Science Australia)","AHPRA","Fitness Australia","The RACGP"], answer:0, explain:"ESSA accredits AEPs. (EPs are self-regulated via ESSA — not AHPRA-registered like physios.)"},
+     {type:"mc", kind:"EP Business", q:"What separates an AEP from a personal trainer?",
+      options:["Nothing","University-qualified allied health who work with clinical/complex conditions and access funding streams","AEPs only do group classes","PTs are more qualified"], answer:1, explain:"AEPs are 4-year university-qualified allied health professionals who manage clinical populations and can access Medicare/NDIS/DVA etc."},
+     {type:"multi", kind:"Tap all that can fund EP", q:"Which can fund exercise physiology services?",
+      options:["Medicare (chronic disease plans)","NDIS","DVA (veterans)","Private health extras"], answers:[0,1,2,3], explain:"All of these fund AEP services — plus workers comp/CTP and private clients."},
+   ]},
+   { title:"Medicare & referrals", icon:"🩺", qs:[
+     {type:"info", kind:"EP Business", title:"Medicare CDM", body:"Under a GP's <b>Chronic Disease Management (CDM)</b> plan, an eligible patient with a chronic condition can access up to <b>5 allied health services per calendar year</b> — and that 5 is <b>shared across all allied health</b> (physio, dietitian, EP, etc.), not 5 each. The GP refers; the patient gets a Medicare rebate; you need a Medicare <b>provider number</b>."},
+     {type:"mc", kind:"EP Business", q:"Under a CDM plan, how many rebated allied health sessions per calendar year?",
+      options:["Unlimited","Up to 5, shared across all allied health","20 each","1"], answer:1, explain:"Up to 5 per calendar year, shared across all allied health providers."},
+     {type:"mc", kind:"EP Business", q:"Who initiates the CDM referral to you?",
+      options:["The patient","The GP","ESSA","The NDIS"], answer:1, explain:"The GP creates the CDM plan and refers."},
+     {type:"mc", kind:"EP Business", q:"To bill Medicare, an AEP needs a:",
+      options:["Personal training cert","Medicare provider number","Gym membership","Police check only"], answer:1, explain:"You register as an AEP to obtain a Medicare provider number."},
+   ]},
+   { title:"NDIS basics", icon:"🧩", qs:[
+     {type:"info", kind:"EP Business", title:"EP in the NDIS", body:"EP usually sits under <b>Capacity Building → Improved Health &amp; Wellbeing</b> (sometimes Improved Daily Living). Providers can be <b>registered or unregistered</b> — and unregistered providers can still serve <b>plan-managed</b> and <b>self-managed</b> participants (just not NDIA/agency-managed ones). Clear reports and <b>outcome measures</b> are what justify continued funding."},
+     {type:"mc", kind:"EP Business", q:"EP services in the NDIS usually fall under:",
+      options:["Core supports","Capacity Building (Improved Health & Wellbeing)","Transport","Nothing"], answer:1, explain:"EP is typically Capacity Building — Improved Health & Wellbeing."},
+     {type:"mc", kind:"EP Business", q:"An UNregistered NDIS provider can see which participants?",
+      options:["Only NDIA-managed","Plan-managed and self-managed","Nobody","Only children"], answer:1, explain:"Unregistered providers can serve plan-managed and self-managed (not NDIA/agency-managed) participants."},
+     {type:"mc", kind:"EP Business", q:"What best justifies continued NDIS funding?",
+      options:["Charging more","Demonstrating progress with outcome measures and reports","Seeing more clients","Nothing needed"], answer:1, explain:"Documented outcomes and reports evidence the value of ongoing support."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 9 · Pro Practice 📋", sub:"Scope, accreditation & the business", color:"var(--purple)", shadow:"var(--purple-d)", icon:"📋",
+  lessons:[
+   { title:"Scope & accreditation", icon:"🎓", qs:[
+     {type:"info", kind:"Pro Practice", title:"Being an AEP", body:"AEPs complete a <b>4-year university degree</b> and are accredited by <b>ESSA</b>. To keep accreditation you must hold <b>professional indemnity insurance</b> and meet ongoing <b>CPD</b> (continuing professional development) requirements. Practise within your <b>scope</b> and refer out when something is beyond it (that's what the red-flag screening is for)."},
+     {type:"mc", kind:"Pro Practice", q:"AEP stands for:",
+      options:["Approved Exercise Provider","Accredited Exercise Physiologist","Advanced Exercise Practitioner","Allied Exercise Professional"], answer:1, explain:"Accredited Exercise Physiologist."},
+     {type:"mc", kind:"Pro Practice", q:"To maintain ESSA accreditation you must:",
+      options:["Do nothing","Complete ongoing CPD and hold professional indemnity insurance","Re-sit university","Renew a gym licence"], answer:1, explain:"Ongoing CPD plus appropriate insurance keep your accreditation current."},
+     {type:"mc", kind:"Pro Practice", q:"When something falls outside your scope, you:",
+      options:["Guess","Refer to the appropriate professional","Ignore it","Push on regardless"], answer:1, explain:"Work within scope and refer out (e.g. for red flags) — safer and more professional."},
+   ]},
+   { title:"Running the business", icon:"📈", qs:[
+     {type:"info", kind:"Pro Practice", title:"The business behind the sessions", body:"Your real <b>hourly rate must cover non-billable time</b> — travel, note-writing, admin, and no-shows. A session fee is not profit. Sustainable practice comes from sensible <b>pricing</b>, strong <b>referral relationships</b> (GPs, support coordinators, other allied health), and clear <b>documentation / outcome reporting</b> that satisfies funders."},
+     {type:"mc", kind:"Pro Practice", q:"Why can't your session fee equal your hourly profit?",
+      options:["It does","Travel, notes, admin and no-shows eat into billable time","Tax doesn't exist","Clients pay double"], answer:1, explain:"Non-billable time (travel, documentation, admin, no-shows) means your effective rate is lower than the headline fee — exactly what your business calculators model."},
+     {type:"mc", kind:"Pro Practice", q:"Valuable referral relationships for an EP include:",
+      options:["Only other EPs","GPs, NDIS support coordinators and other allied health","Nobody","Competitors only"], answer:1, explain:"GPs (CDM), support coordinators (NDIS) and allied health colleagues drive referrals."},
+     {type:"mc", kind:"Pro Practice", q:"Good documentation matters because it:",
+      options:["Wastes time","Supports funding/outcomes, continuity of care and medico-legal cover","Is optional","Only helps marketing"], answer:1, explain:"Notes and outcome measures justify funding, maintain continuity, and protect you medico-legally."},
+   ]},
+  ]
+ },
 ];
 
 /* ============================================================
