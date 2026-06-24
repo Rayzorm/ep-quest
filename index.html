@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EP Quest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#58cc02">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>EP Quest — train your clinical brain</title>
+<style>
+  :root{
+    --green:#58cc02; --green-d:#48a800; --greenbg:#d7ffb8;
+    --blue:#1cb0f6; --blue-d:#1690c4;
+    --purple:#ce82ff; --purple-d:#a560d0;
+    --red:#ff4b4b; --red-d:#d63b3b; --redbg:#ffdfe0;
+    --gold:#ffc800; --gold-d:#e6a700;
+    --teal:#00cd9c; --teal-d:#00a37c;
+    --ink:#3c3c3c; --muted:#777; --line:#e5e5e5; --line2:#d0d0d0;
+    --bg:#fff; --card:#fff;
+    --shadow-press:0 4px 0;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --ink:#e8eef2; --muted:#9bb0bf; --line:#33424f; --line2:#3d4f5e; --bg:#0f1722; --card:#16212e; }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:"Nunito",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+    font-weight:700;
+  }
+  .app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;position:relative}
+
+  /* ---- Top HUD ---- */
+  .hud{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;
+    padding:14px 18px calc(14px) ;background:var(--bg);border-bottom:2px solid var(--line)}
+  .hud .item{display:flex;align-items:center;gap:6px;font-size:17px;font-weight:800}
+  .hud .item .ic{font-size:19px}
+  .hud .flame{color:#ff9600}
+  .hud .gem{color:var(--blue)}
+  .hud .heart{color:var(--red)}
+  .hud .spacer{flex:1}
+  .hud .lvl{background:var(--greenbg);color:var(--green-d);font-size:13px;font-weight:800;
+    padding:5px 11px;border-radius:999px}
+  @media (prefers-color-scheme:dark){ .hud .lvl{background:#1d3a16} }
+
+  /* ---- Path ---- */
+  .scroll{flex:1;overflow-y:auto;padding-bottom:40px}
+  .unit-head{margin:22px 16px 8px;border-radius:18px;padding:16px 20px;color:#fff;
+    box-shadow:var(--shadow-press) rgba(0,0,0,.18);position:relative}
+  .unit-head h2{margin:0;font-size:19px;font-weight:800;letter-spacing:.2px}
+  .unit-head p{margin:3px 0 0;font-size:13px;font-weight:700;opacity:.92}
+  .path{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0 20px}
+  .node{position:relative;width:74px;height:66px;border:none;background:transparent;cursor:pointer;padding:0}
+  .node .disc{width:68px;height:62px;border-radius:50%;display:grid;place-items:center;
+    font-size:28px;transition:transform .08s;box-shadow:var(--shadow-press) var(--nd,#bbb)}
+  .node:active .disc{transform:translateY(3px);box-shadow:0 1px 0 var(--nd,#bbb)}
+  .node.locked .disc{background:var(--line);color:#aaa;box-shadow:var(--shadow-press) var(--line2)}
+  .node.locked{cursor:not-allowed}
+  .node .crown{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:15px;
+    filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
+  .node .start-pop{position:absolute;top:-34px;left:50%;transform:translateX(-50%);
+    background:var(--card);color:var(--green);border:2px solid var(--line);font-size:11px;font-weight:800;
+    padding:4px 9px;border-radius:9px;letter-spacing:.5px;white-space:nowrap;animation:bob 1.1s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
+  /* zig-zag */
+  .path .node:nth-child(6n+2){margin-left:74px}
+  .path .node:nth-child(6n+3){margin-left:104px}
+  .path .node:nth-child(6n+4){margin-left:74px}
+  .path .node:nth-child(6n+6){margin-left:-74px}
+  .path .node:nth-child(6n+0){margin-left:-104px}
+
+  /* ---- Lesson player ---- */
+  .player{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;max-width:480px;margin:0 auto}
+  .player.show{display:flex}
+  .ptop{display:flex;align-items:center;gap:14px;padding:16px 18px}
+  .quit{font-size:24px;color:var(--muted);background:none;border:none;cursor:pointer;font-weight:800;line-height:1}
+  .bar{flex:1;height:16px;background:var(--line);border-radius:999px;overflow:hidden}
+  .bar .fill{height:100%;width:0;background:var(--green);border-radius:999px;transition:width .3s}
+  .ptop .hearts{display:flex;align-items:center;gap:4px;color:var(--red);font-weight:800;font-size:17px}
+
+  .qarea{flex:1;overflow-y:auto;padding:8px 20px 20px}
+  .qkind{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin:10px 0 14px}
+  .qtext{font-size:22px;font-weight:800;line-height:1.35;margin-bottom:8px}
+  .qscn{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:13px 15px;
+    font-size:15px;font-weight:700;line-height:1.5;margin:6px 0 18px;color:var(--ink)}
+  .qscn .who{color:var(--blue);font-weight:800;font-size:12px;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px}
+  .qscn .hl{color:var(--ink);background:var(--gold);padding:0 3px;border-radius:4px}
+  @media (prefers-color-scheme:dark){ .qscn .hl{background:#5a4a00;color:#ffe27a} }
+
+  .opts{display:flex;flex-direction:column;gap:11px}
+  .opt{display:flex;align-items:center;gap:12px;text-align:left;width:100%;
+    background:var(--card);border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;
+    padding:15px 16px;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;transition:.05s}
+  .opt:active{transform:translateY(2px);border-bottom-width:2px}
+  .opt .key{width:26px;height:26px;border-radius:7px;border:2px solid var(--line2);display:grid;place-items:center;
+    font-size:13px;color:var(--muted);flex:none}
+  .opt.sel{border-color:var(--blue);background:rgba(28,176,246,.10)}
+  .opt.sel .key{border-color:var(--blue);color:var(--blue)}
+  .opt.correct{border-color:var(--green);background:rgba(88,204,2,.13)}
+  .opt.correct .key{border-color:var(--green);color:var(--green);background:var(--green);color:#fff}
+  .opt.wrong{border-color:var(--red);background:rgba(255,75,75,.10)}
+  .opt.wrong .key{border-color:var(--red);color:var(--red)}
+  .opt.dim{opacity:.5}
+
+  /* match */
+  .match{display:flex;gap:12px}
+  .match .col{flex:1;display:flex;flex-direction:column;gap:10px}
+  .mitem{background:var(--card);border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;
+    padding:13px 12px;font-size:14px;font-weight:700;cursor:pointer;text-align:center;min-height:54px;
+    display:flex;align-items:center;justify-content:center}
+  .mitem.sel{border-color:var(--blue);background:rgba(28,176,246,.12)}
+  .mitem.done{opacity:.35;pointer-events:none;border-color:var(--green)}
+
+  /* ---- bottom check / feedback ---- */
+  .foot{border-top:2px solid var(--line);padding:16px 20px calc(20px + env(safe-area-inset-bottom));transition:.2s}
+  .btn{display:block;width:100%;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:800;
+    letter-spacing:.6px;text-transform:uppercase;cursor:pointer;color:#fff;box-shadow:var(--shadow-press) var(--bd,#999)}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--bd,#999)}
+  .btn.green{background:var(--green);--bd:var(--green-d)}
+  .btn.gray{background:var(--line);color:#9a9a9a;--bd:var(--line2);cursor:default}
+  .btn.gray:active{transform:none;box-shadow:var(--shadow-press) var(--line2)}
+  .btn.red{background:var(--red);--bd:var(--red-d)}
+  .foot.ok{background:var(--greenbg)} .foot.bad{background:var(--redbg)}
+  @media (prefers-color-scheme:dark){ .foot.ok{background:#16301a} .foot.bad{background:#321618} }
+  .fb{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+  .fb .badge{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:22px;flex:none}
+  .foot.ok .fb .badge{background:var(--green);color:#fff}
+  .foot.bad .fb .badge{background:var(--red);color:#fff}
+  .fb .txt b{font-size:17px;display:block}
+  .foot.ok .fb .txt b{color:var(--green-d)} .foot.bad .fb .txt b{color:var(--red-d)}
+  .fb .txt span{font-size:14px;font-weight:700;color:var(--ink);line-height:1.45}
+  @media (prefers-color-scheme:dark){ .foot.ok .fb .txt b{color:#9be861} }
+
+  /* ---- complete screen ---- */
+  .done{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:30px;max-width:480px;margin:0 auto}
+  .done.show{display:flex}
+  .done .trophy{font-size:84px;animation:pop .5s cubic-bezier(.2,1.4,.5,1)}
+  @keyframes pop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+  .done h1{font-size:28px;margin:14px 0 4px;color:var(--gold)}
+  .done .sub{color:var(--muted);font-size:15px;margin-bottom:26px}
+  .done .rewards{display:flex;gap:14px;margin-bottom:30px}
+  .rw{border:3px solid var(--gold);border-radius:16px;padding:4px;min-width:96px;overflow:hidden}
+  .rw .cap{background:var(--gold);color:#fff;font-size:11px;font-weight:800;letter-spacing:.6px;padding:3px;border-radius:9px 9px 0 0;margin:-4px -4px 0}
+  .rw .val{font-size:24px;font-weight:800;padding:12px 0;color:var(--gold-d)}
+  .rw.blue{border-color:var(--blue)} .rw.blue .cap{background:var(--blue)} .rw.blue .val{color:var(--blue-d)}
+  .rw.flame{border-color:#ff9600} .rw.flame .cap{background:#ff9600} .rw.flame .val{color:#ff7a00}
+
+  .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);
+    padding:10px 18px;border-radius:12px;font-size:14px;font-weight:800;z-index:90;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+
+  .home-foot{text-align:center;color:var(--muted);font-size:11px;font-weight:700;padding:10px 30px 30px;line-height:1.5}
+
+  /* confetti */
+  .confetti{position:fixed;width:10px;height:14px;top:-20px;z-index:70;will-change:transform}
+
+  /* ---- teaching card (Learn mode) ---- */
+  .teach{background:var(--card);border:2px solid var(--line);border-bottom-width:4px;border-radius:18px;overflow:hidden;margin-top:6px}
+  .teach-h{background:var(--teal);color:#04261d;font-size:18px;font-weight:800;padding:14px 16px;line-height:1.3}
+  .teach-b{padding:16px 16px 18px;font-size:16px;font-weight:600;line-height:1.62;color:var(--ink)}
+  .teach-b b{color:var(--teal-d)}
+  @media (prefers-color-scheme:dark){ .teach-h{color:#d7fff4} .teach-b b{color:#5ee0c2} }
+
+  /* ---- bottom nav ---- */
+  .nav{position:sticky;bottom:0;display:flex;gap:10px;padding:8px 18px calc(8px + env(safe-area-inset-bottom));
+    background:var(--bg);border-top:2px solid var(--line);z-index:25}
+  .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:none;
+    font-size:21px;color:var(--muted);padding:7px;border-radius:13px;cursor:pointer;font-weight:800}
+  .navbtn span{font-size:10.5px;letter-spacing:.8px}
+  .navbtn.on{color:var(--green-d);background:var(--greenbg)}
+  @media (prefers-color-scheme:dark){ .navbtn.on{color:#9be861;background:#16301a} }
+
+  /* ---- Learn library ---- */
+  .learn-intro{margin:18px 16px 6px;font-size:20px;font-weight:800}
+  .learn-intro span{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-top:6px;line-height:1.5}
+  .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 24px}
+  .ctile{background:var(--card);border:2px solid var(--line);border-bottom:5px solid var(--cs,var(--line2));
+    border-radius:16px;padding:15px 14px;cursor:pointer;text-align:left;transition:.06s;min-height:120px;display:flex;flex-direction:column;gap:7px}
+  .ctile:active{transform:translateY(2px);border-bottom-width:3px}
+  .ctile .cic{font-size:27px;width:50px;height:50px;border-radius:13px;display:grid;place-items:center;background:var(--cc,var(--blue));box-shadow:0 3px 0 var(--cs)}
+  .ctile .cname{font-size:14.5px;font-weight:800;line-height:1.2;color:var(--ink)}
+  .ctile .cmeta{font-size:11.5px;font-weight:700;color:var(--muted);margin-top:auto}
+
+  /* ---- key-numbers list (gold cheat card) ---- */
+  ul.keys{margin:0;padding-left:20px}
+  ul.keys li{margin:8px 0;font-weight:700;line-height:1.45}
+  ul.keys li b{color:var(--gold-d)}
+  @media (prefers-color-scheme:dark){ ul.keys li b{color:#ffd24d} }
+
+  /* ---- Profile / YOU tab ---- */
+  .btn.blue{background:var(--blue);--bd:var(--blue-d)}
+  .prof-top{display:flex;align-items:center;gap:16px;padding:20px 18px 8px}
+  .prof-lvl{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));
+    color:#04121f;font-size:27px;font-weight:800;display:grid;place-items:center;box-shadow:0 4px 0 var(--blue-d);flex:none}
+  .prof-meta{flex:1;min-width:0}
+  .prof-meta b{font-size:20px}
+  .xpbar{height:12px;background:var(--line);border-radius:999px;overflow:hidden;margin:6px 0 4px}
+  .xpfill{height:100%;background:var(--blue);border-radius:999px;transition:width .4s}
+  .prof-meta span{font-size:12px;color:var(--muted);font-weight:700}
+  .goal{margin:10px 16px;padding:12px 14px;background:var(--card);border:2px solid var(--line);border-radius:14px;font-size:14px;font-weight:700}
+  .goal b{float:right;color:var(--gold-d)}
+  .goalbar{height:10px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:10px;clear:both}
+  .goalfill{height:100%;background:var(--gold);border-radius:999px;transition:width .4s}
+  .statrow{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:6px 16px 10px}
+  .stat2{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 3px;text-align:center}
+  .stat2 b{display:block;font-size:15px}
+  .stat2 span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .ach-h{font-size:18px;font-weight:800;margin:12px 16px 4px}
+  .ach-h span{font-size:13px;color:var(--muted);font-weight:700}
+  .achgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 16px 26px}
+  .ach{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:13px 10px;text-align:center;opacity:.5}
+  .ach.got{opacity:1;border-color:var(--gold);box-shadow:0 3px 0 var(--gold-d)}
+  .ach-ic{font-size:30px}
+  .ach-n{font-size:13.5px;font-weight:800;margin-top:5px}
+  .ach-d{font-size:11px;color:var(--muted);font-weight:700;margin-top:2px;line-height:1.3}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="item flame"><span class="ic">🔥</span><span id="hudStreak">0</span></div>
+    <div class="item gem"><span class="ic">💎</span><span id="hudXp">0</span></div>
+    <div class="item heart"><span class="ic">❤️</span><span id="hudHearts">5</span></div>
+    <div class="spacer"></div>
+    <div class="lvl" id="hudLvl">Level 1</div>
+  </div>
+
+  <div class="scroll" id="home"></div>
+  <div class="scroll" id="learn" style="display:none"></div>
+  <div class="scroll" id="you" style="display:none"></div>
+
+  <div class="home-foot">
+    EP Quest · educational practice only — model answers are teaching defaults, not clinical directives.
+    Always check against ESSA &amp; current guidelines. Progress saved on this device.
+  </div>
+
+  <div class="nav">
+    <button class="navbtn on" id="navQuest" onclick="showTab('quest')">🎮<span>QUEST</span></button>
+    <button class="navbtn" id="navLearn" onclick="showTab('learn')">📚<span>LEARN</span></button>
+    <button class="navbtn" id="navYou" onclick="showTab('you')">🏅<span>YOU</span></button>
+  </div>
+</div>
+
+<!-- Lesson player -->
+<div class="player" id="player">
+  <div class="ptop">
+    <button class="quit" onclick="quitLesson()">✕</button>
+    <div class="bar"><div class="fill" id="barFill"></div></div>
+    <div class="hearts">❤️<span id="liveHearts">5</span></div>
+  </div>
+  <div class="qarea" id="qarea"></div>
+  <div class="foot" id="foot">
+    <button class="btn gray" id="checkBtn" disabled onclick="onCheck()">Check</button>
+  </div>
+</div>
+
+<!-- Complete -->
+<div class="done" id="done">
+  <div class="trophy" id="trophyIcon">🏆</div>
+  <h1 id="doneTitle">Lesson complete!</h1>
+  <div class="sub" id="doneSub">You're building the reflex.</div>
+  <div class="rewards">
+    <div class="rw flame"><div class="cap">STREAK</div><div class="val" id="rwStreak">1</div></div>
+    <div class="rw"><div class="cap">TOTAL XP</div><div class="val" id="rwXp">10</div></div>
+    <div class="rw blue"><div class="cap">ACCURACY</div><div class="val" id="rwAcc">100%</div></div>
+  </div>
+  <button class="btn green" style="max-width:300px" onclick="closeDone()">Continue</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   EP QUEST — content
+   Question types: mc (one answer), multi (tap all), match (pairs)
+   ============================================================ */
+const UNITS = [
+ {
+  title:"Unit 1 · The EP Brain", sub:"The 6 questions, in order", color:"var(--green)", shadow:"var(--green-d)", icon:"🧠",
+  lessons:[
+   { title:"Meet the 6 questions", icon:"⭐", qs:[
+     {type:"mc", kind:"The framework", q:"What's the FIRST question of the EP Brain for every client?",
+      options:["What condition are we dealing with?","What's the safest starting dose?","What are they trying to do?","How do we progress?"],
+      answer:0, explain:"Start by naming the condition and how it behaves during exercise — the pathophysiology lens."},
+     {type:"mc", kind:"The framework", q:"Which question is the SAFETY layer?",
+      options:["Q1 — What condition?","Q2 — What can kill or seriously harm them?","Q4 — What can they tolerate?","Q6 — How do we progress?"],
+      answer:1, explain:"Q2 is the safety layer: red flags, danger numbers, and stop rules. Never skipped."},
+     {type:"mc", kind:"Order", q:"You've named the condition and screened for danger. What comes NEXT?",
+      options:["Pick the safest dose","Find out what they're trying to do","Test their balance","Plan progression"],
+      answer:1, explain:"Q3 — the client's goal, in their words. It decides what you test and what you dose."},
+     {type:"multi", kind:"Tap all that apply", q:"Which of these are among the 6 questions?",
+      options:["What can they currently tolerate?","What's the safest starting dose?","What's their insurance number?","How do we progress?"],
+      answers:[0,1,3], explain:"The 6: condition, danger, goal, tolerance, safest dose, progression. Insurance isn't clinical reasoning."},
+     {type:"match", kind:"Match them up", q:"Match each question to what it really means:",
+      pairs:[["Q2 Danger","Safety layer"],["Q4 Tolerance","Objective baseline"],["Q5 Dose","Safe first step"]],
+      explain:"Danger = safety layer, Tolerance = baseline you measure, Dose = the safe first step (not the perfect program)."},
+     {type:"mc", kind:"The framework", q:"What is Q5 — the 'safest starting dose' — really asking for?",
+      options:["The most effective program possible","The safe first step they'll actually do","The hardest they can tolerate","A discharge plan"],
+      answer:1, explain:"Not the perfect program — the safe first step. Success in week 1 beats stimulus."},
+   ]},
+   { title:"Goal & dose logic", icon:"🎯", qs:[
+     {type:"mc", kind:"Reasoning", q:"A client says \"I want to lose weight.\" Which trainable qualities do you hear?",
+      options:["Only heavy strength work","Aerobic volume + strength to protect muscle + adherence","Balance and reaction time","Sprint speed"],
+      answer:1, explain:"Energy balance via aerobic volume, strength to preserve muscle, and adherence above all."},
+     {type:"mc", kind:"Reasoning", q:"\"I want to stay independent and not go into a home.\" Best target qualities?",
+      options:["1RM bench press","Balance, power, grip, sit-to-stand, falls prevention","VO₂max only","Flexibility"],
+      answer:1, explain:"Independence = balance, lower-limb power, grip, functional tasks, falls prevention."},
+     {type:"mc", kind:"Dosing", q:"What's the safest order to progress the early variables?",
+      options:["Intensity → duration → frequency","Frequency → duration → intensity","Load → speed → range","Random is fine"],
+      answer:1, explain:"Build the habit (frequency), then volume (duration), then the hard work (intensity)."},
+     {type:"mc", kind:"Dosing", q:"The 'dose check' before a client leaves is:",
+      options:["\"Did they sweat enough?\"","\"If they do this on their WORST day this week, are they still safe?\"","\"Was it their max?\"","\"Did they enjoy it?\""],
+      answer:1, explain:"If yes, that's the dose. If no, cut it down."},
+     {type:"multi", kind:"Tap all that apply", q:"Good objective baseline tests (Q4) include:",
+      options:["6-minute walk test","30-second sit-to-stand","Timed Up and Go","Their horoscope"],
+      answers:[0,1,2], explain:"6MWT (aerobic), 30s-STS (strength), TUG (balance/falls). Pick 2–4 that match the goal."},
+   ]},
+   { title:"Spot the question", icon:"🔎", qs:[
+     {type:"mc", kind:"Which question?", q:"\"He wants to walk his daughter down the aisle next year.\" Which EP Brain question is this?",
+      options:["Q1 — Condition","Q3 — Goal","Q4 — Tolerance","Q6 — Progression"],
+      answer:1, explain:"That's the client's goal in their own words — Q3."},
+     {type:"mc", kind:"Which question?", q:"\"6-minute walk test = 280 m, RPE 5/10.\" Which question?",
+      options:["Q1 — Condition","Q2 — Danger","Q4 — What can they tolerate","Q5 — Dose"],
+      answer:2, explain:"An objective baseline measure = Q4, tolerance/capacity."},
+     {type:"mc", kind:"Which question?", q:"\"Stop if chest pain or SpO₂ drops below 88%.\" Which question?",
+      options:["Q2 — Danger / safety layer","Q3 — Goal","Q5 — Dose","Q6 — Progression"],
+      answer:0, explain:"Stop rules and danger numbers live in Q2, the safety layer."},
+     {type:"mc", kind:"Which question?", q:"\"Next week, take the walk from 10 up to 15 minutes.\" Which question?",
+      options:["Q1 — Condition","Q4 — Tolerance","Q5 — Dose","Q6 — Progression"],
+      answer:3, explain:"Changing the dose forward over time = Q6 (here the duration lever)."},
+     {type:"multi", kind:"Tap all that are Q2 (Danger)", q:"Which belong to the safety layer?",
+      options:["Defer if resting BP >180/110","She used to play netball","Check feet for ulcers in neuropathy","Stop for new one-sided weakness"],
+      answers:[0,2,3], explain:"BP deferral, foot integrity, and new neuro signs are all safety-layer items."},
+   ]},
+   { title:"Reason it through", icon:"🧩", qs:[
+     {type:"mc", kind:"Reasoning", q:"\"I want to get off the floor by myself.\" What are you really training?",
+      options:["VO₂max","Leg strength & power, single-leg control, mobility","Grip endurance","Breathing rate"],
+      answer:1, explain:"Floor transfers need lower-limb strength/power and control through range."},
+     {type:"mc", kind:"Logic", q:"Why does Q3 (the goal) come before Q4 and Q5?",
+      options:["It doesn't matter","The goal decides what you test and what you dose","To fill out paperwork","Goals are optional"],
+      answer:1, explain:"The goal points you to the relevant tests (Q4) and the dose that moves toward it (Q5)."},
+     {type:"mc", kind:"Rule", q:"If you can't answer all six questions for a client, that tells you:",
+      options:["Nothing useful","Exactly what you still need to assess next","To discharge them","To guess"],
+      answer:1, explain:"The gap is the to-do list — it shows what to screen or measure next."},
+     {type:"mc", kind:"Multimorbidity", q:"Client has COPD, knee OA and diabetes. How do you frame it?",
+      options:["Pick one and ignore the rest","Program for the most limiting, screen for the most dangerous","Treat all identically","Refuse to train them"],
+      answer:1, explain:"Program around the most limiting condition; screen for the most dangerous one."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 2 · Red Flags 🚨", sub:"The safety layer — Q2", color:"var(--red)", shadow:"var(--red-d)", icon:"🚨",
+  lessons:[
+   { title:"Stop the session", icon:"🛑", qs:[
+     {type:"mc", kind:"Emergency", q:"Mid-session a client gets central chest pressure radiating to the jaw, not settling. You:",
+      options:["Lower the intensity and continue","Stop, rest; if not resolving in minutes → call 000","Send them home to rest","Give them water and watch"],
+      answer:1, explain:"Possible cardiac event. Stop, rest, and escalate to 000 if it isn't resolving (or known angina unrelieved by GTN)."},
+     {type:"mc", kind:"Numbers", q:"During exercise a COPD client's SpO₂ drops to 86%. The rule of thumb is:",
+      options:["Fine, push on","Stop/rest until recovered — SpO₂ <88–90% is a stop sign","Only worry below 70%","Increase the pace to 'open the lungs'"],
+      answer:1, explain:"Desaturation below ~88–90% (or per medical guidance) = stop and recover, reduce intensity, flag it."},
+     {type:"mc", kind:"Emergency", q:"A client suddenly has facial droop and slurred speech. This is:",
+      options:["Low blood sugar — give juice","FAST → call 000","Just fatigue","Dehydration"],
+      answer:1, explain:"New one-sided neuro signs = possible stroke. FAST, call 000."},
+     {type:"mc", kind:"Diabetes", q:"An insulin-using client goes shaky, sweaty and confused; BGL 3.2 mmol/L. First action?",
+      options:["Keep exercising to 'burn it off'","Stop, give 15 g fast carbs, retest in 15 min","Lie them down and wait","Give a protein bar"],
+      answer:1, explain:"Hypoglycaemia. Stop, 15 g fast carbs, retest in 15, repeat if needed; no more exercise that session."},
+     {type:"multi", kind:"Tap all the STOP signs", q:"Which are 'stop the session / urgent' red flags?",
+      options:["Syncope or near-fainting","Pleasant mild muscle fatigue","Severe breathlessness, can't speak","New one-sided weakness"],
+      answers:[0,2,3], explain:"Syncope, severe unspeakable breathlessness, and new neuro signs all stop the session. Mild muscle fatigue is normal."},
+   ]},
+   { title:"Don't even start", icon:"⛔", qs:[
+     {type:"mc", kind:"Numbers", q:"Resting BP today is 184/112. Best call?",
+      options:["Light session only","No exercise today — refer; defer until controlled","Normal session","Heavy strength to 'pump it down'"],
+      answer:1, explain:">180/110 mmHg → don't exercise today, refer. (160–179 systolic → light only, monitor, flag to GP.)"},
+     {type:"mc", kind:"Heart failure", q:"A heart-failure client gained 2.5 kg in 3 days with new ankle swelling. You:",
+      options:["Proceed, it's just water","Hold exercise — medical review first (decompensation signs)","Add diuretic yourself","Do a hard session to shift fluid"],
+      answer:1, explain:"≥2 kg in ~3 days + new oedema/orthopnoea = possible decompensation → medical review before exercising."},
+     {type:"mc", kind:"Screen & refer", q:"Low back pain PLUS saddle numbness and new bladder changes means:",
+      options:["Prescribe core work","Cauda equina until proven otherwise → emergency department","Massage and heat","Just rest a week"],
+      answer:1, explain:"Saddle anaesthesia + bladder/bowel change + bilateral leg symptoms = cauda equina red flag → ED."},
+     {type:"mc", kind:"Infection", q:"Client arrives with fever, aches and feels systemically unwell. You:",
+      options:["Light session to 'sweat it out'","Rest until resolved — don't exercise with systemic infection","Normal session, just shorter","Stretching only"],
+      answer:1, explain:"Systemic symptoms (fever, body aches) → rest until resolved."},
+     {type:"multi", kind:"Tap all 'don't start today'", q:"Which should make you DEFER and refer before exercising?",
+      options:["New irregular pulse at rest","Resting HR 64, feels well","New calf pain + swelling (possible DVT)","BGL 2.8 in an insulin user"],
+      answers:[0,2,3], explain:"New arrhythmia, possible DVT, and hypoglycaemia all defer. A normal resting HR is fine."},
+   ]},
+   { title:"Know your numbers", icon:"🔢", qs:[
+     {type:"mc", kind:"Threshold", q:"Below which SpO₂ (rule of thumb) do you stop and recover?",
+      options:["98%","94%","88–90%","75%"],
+      answer:2, explain:"SpO₂ <88–90% (or per medical guidance) = stop/rest until recovered."},
+     {type:"mc", kind:"Threshold", q:"Resting BP above which value = no exercise today?",
+      options:["140/90","160/100","180/110","200/120"],
+      answer:2, explain:">180/110 mmHg → no exercise today, refer."},
+     {type:"mc", kind:"Threshold", q:"BGL below which value defines hypoglycaemia to act on?",
+      options:["4.0 mmol/L","8 mmol/L","10 mmol/L","15 mmol/L"],
+      answer:0, explain:"<4.0 mmol/L = hypoglycaemia: stop, 15 g fast carbs, retest in 15 min."},
+     {type:"mc", kind:"Threshold", q:"An insulin user's pre-exercise BGL is 4.6. You:",
+      options:["Start as normal","Give carbs first — under ~5.0 before exercise","Cancel the session","Increase insulin"],
+      answer:1, explain:"Below ~5.0 mmol/L, top up with carbs before exercising."},
+     {type:"mc", kind:"Threshold", q:"A heart-failure client gains how much weight, how fast, to flag review?",
+      options:["≥2 kg in ~3 days","10 kg in a month","0.5 kg overnight","Any gain at all"],
+      answer:0, explain:"≥2 kg in ~3 days (or new oedema/orthopnoea) → medical review first."},
+   ]},
+   { title:"Safety reflexes", icon:"⚡", qs:[
+     {type:"mc", kind:"Reflex", q:"A client has a near-faint during exercise. You:",
+      options:["Walk it off","Stop, lie them flat, check pulse/BP, arrange medical review","Give caffeine","Continue seated"],
+      answer:1, explain:"Stop, lie flat, check pulse/BP; medical review before more exercise."},
+     {type:"mc", kind:"Screen & refer", q:"Back pain with night pain, unexplained weight loss and a cancer history:",
+      options:["Load it up","Refer — possible sinister cause","Massage only","Ignore"],
+      answer:1, explain:"These are sinister red flags for back pain → refer."},
+     {type:"mc", kind:"Reflex", q:"Sudden severe headache with new vision change mid-session:",
+      options:["Push through","Stop; urgent medical review","Hydrate and continue","Stretch the neck"],
+      answer:1, explain:"Stop and seek urgent review — not a symptom to train through."},
+     {type:"mc", kind:"Falls", q:"A client reports two falls in the past year. Before challenging programming you:",
+      options:["Add plyometrics","Do a falls/balance assessment first","Ignore it","Only do seated work forever"],
+      answer:1, explain:"≥2 falls/year (or a fall with injury) → assess falls & balance before progressing challenge."},
+     {type:"multi", kind:"Tap all that need 000", q:"Which warrant calling 000?",
+      options:["Chest pain not resolving in minutes","DOMS the day after","Face droop + slurred speech","Mild knee ache"],
+      answers:[0,2], explain:"Unresolving chest pain and FAST stroke signs are emergencies. Soreness and mild ache are not."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 3 · Know the Condition 🫁", sub:"Pathophysiology lens — Q1", color:"var(--blue)", shadow:"var(--blue-d)", icon:"🫁",
+  lessons:[
+   { title:"What it does to exercise", icon:"⚙️", qs:[
+     {type:"mc", kind:"Meds", q:"A client on a BETA-BLOCKER — how do you set aerobic intensity?",
+      options:["Target heart rate as usual","Use RPE / talk test — beta-blockers blunt HR","Push to max HR","Ignore intensity"],
+      answer:1, explain:"Beta-blockers blunt the HR response, so HR is unreliable — anchor to RPE and the talk test."},
+     {type:"mc", kind:"OA", q:"Best framing of pain in knee osteoarthritis?",
+      options:["Pain means you're damaging the joint","Pain ≠ damage; strength is the treatment","Avoid all loading","Only do cardio"],
+      answer:1, explain:"In OA, hurt ≠ harm. Progressive strengthening protects the joint — it doesn't wear it out."},
+     {type:"mc", kind:"Osteoporosis", q:"Which is contraindicated early in osteoporosis?",
+      options:["Progressive resistance with neutral spine","Loaded spinal flexion and rotation (e.g. weighted sit-ups)","Weight-bearing walking","Balance training"],
+      answer:1, explain:"Avoid loaded spinal flexion/rotation (fracture risk). Progressive loading + balance are the goal."},
+     {type:"mc", kind:"Parkinson's", q:"When should you ideally train a Parkinson's client?",
+      options:["First thing, before meds","In the ON-medication window","Right at bedtime","Doesn't matter"],
+      answer:1, explain:"Train in the ON window for safety and movement quality; watch orthostatic drops on transitions."},
+     {type:"match", kind:"Match condition → key feature", q:"Match each condition to its exercise-relevant feature:",
+      pairs:[["COPD","Desaturation risk"],["Stroke","Falls / hemiparesis"],["T2DM on insulin","Hypoglycaemia risk"]],
+      explain:"COPD → watch SpO₂; stroke → falls & weakness; insulin-treated diabetes → hypo risk."},
+   ]},
+   { title:"Multimorbidity & meds", icon:"💊", qs:[
+     {type:"mc", kind:"Rule", q:"With multiple conditions, the rule of thumb is:",
+      options:["Program for the fittest condition","Program for the most LIMITING condition, screen for the most DANGEROUS","Treat them all equally","Pick one and ignore the rest"],
+      answer:1, explain:"Program for the most limiting condition; screen for the most dangerous one."},
+     {type:"mc", kind:"Cancer", q:"A client mid-chemo has fluctuating blood counts. On a low-count day you should:",
+      options:["Do your hardest planned session","Avoid high intensity & germy/crowded settings; watch for fever","Cancel exercise forever","Ignore the bloods"],
+      answer:1, explain:"Neutropenia → avoid high intensity and infection exposure; fever → medical review. Flex the dose to the day."},
+     {type:"mc", kind:"Stroke + HTN", q:"A post-stroke client also has hypertension and feels dizzy standing quickly. Key safety habit?",
+      options:["Rush transitions to save time","Change positions slowly — orthostatic hypotension risk","Avoid all standing","Only train lying down"],
+      answer:1, explain:"Dizzy on standing = orthostatic hypotension; move between positions slowly, support nearby."},
+     {type:"multi", kind:"Tap all that apply", q:"For a sedentary client with diabetes, high cholesterol & BMI 33 never tested — what raises your guard?",
+      options:["Possible silent cardiac risk","Hypoglycaemia if on insulin","Foot integrity if neuropathy","Their favourite colour"],
+      answers:[0,1,2], explain:"Silent cardiac risk, hypo risk, and foot care are all live concerns. Start low, screen, check feet."},
+   ]},
+   { title:"Heart & lungs", icon:"❤️", qs:[
+     {type:"mc", kind:"Heart failure", q:"Which trio do you watch in a heart-failure client?",
+      options:["Weight gain, oedema, new breathlessness","Grip, height, hair","Step count only","Nothing"],
+      answer:0, explain:"Rising weight, new oedema and new breathlessness flag decompensation."},
+     {type:"mc", kind:"COPD", q:"Pursed-lip breathing is taught mainly to:",
+      options:["Increase heart rate","Aid recovery and ease breathlessness during effort","Build biceps","Lower blood sugar"],
+      answer:1, explain:"It helps control dyspnoea and aids recovery between efforts."},
+     {type:"mc", kind:"Hypertension", q:"Which should you specifically avoid early in uncontrolled hypertension?",
+      options:["Light rhythmic aerobic","Valsalva / heavy isometric straining","Walking","Breathing drills"],
+      answer:1, explain:"Breath-holding and heavy isometrics spike BP — coach breathing, lighten load."},
+     {type:"mc", kind:"Cardiac", q:"For a beta-blocked client, your intensity gauge is:",
+      options:["Target heart rate","RPE and the talk test","Max HR","Step cadence"],
+      answer:1, explain:"Beta-blockers blunt HR — use RPE / talk test instead."},
+   ]},
+   { title:"Brain & bones", icon:"🦴", qs:[
+     {type:"mc", kind:"Osteoporosis", q:"Which movement is contraindicated early in osteoporosis?",
+      options:["Loaded spinal flexion/rotation","Neutral-spine hip hinge","Walking","Balance work"],
+      answer:0, explain:"Avoid loaded spinal flexion/rotation due to fracture risk."},
+     {type:"mc", kind:"Osteoporosis", q:"What does osteoporosis actually need from exercise?",
+      options:["Rest and avoidance","Progressive loading + balance training","Only stretching","High-impact from day one"],
+      answer:1, explain:"Bone needs progressive resistance plus balance to cut fracture & fall risk."},
+     {type:"mc", kind:"Parkinson's", q:"A hallmark training approach for Parkinson's is:",
+      options:["Small, slow movements","Big-amplitude movement + balance, in the ON window","Avoid all balance work","Train only when OFF meds"],
+      answer:1, explain:"Big-amplitude, cued movement and balance, ideally in the ON-medication window."},
+     {type:"mc", kind:"Stroke", q:"The most carry-over for regaining a skill post-stroke comes from:",
+      options:["Generic machine circuits","Task-specific practice of the actual skill","Passive stretching","Bed rest"],
+      answer:1, explain:"Task-specific practice (sit-to-stand, stepping, walking) drives recovery."},
+     {type:"mc", kind:"Cancer", q:"With known bone metastases, you avoid:",
+      options:["All movement","High-impact loading at the metastatic sites","Light walking","Breathing exercises"],
+      answer:1, explain:"No high-impact loading at metastatic sites — fracture risk."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 4 · Test & Measure 🎯", sub:"Baselines & norms — Q4", color:"var(--purple)", shadow:"var(--purple-d)", icon:"📏",
+  lessons:[
+   { title:"Pick the right test", icon:"🧪", qs:[
+     {type:"match", kind:"Match goal → test", q:"Match the domain to a go-to test:",
+      pairs:[["Aerobic capacity","6-minute walk test"],["Falls / balance","Timed Up and Go"],["Lower-limb strength","30s sit-to-stand"]],
+      explain:"6MWT for aerobic, TUG for balance/falls risk, 30s-STS for leg strength."},
+     {type:"mc", kind:"Norms", q:"A Timed Up and Go (TUG) above roughly which time flags falls risk in older adults?",
+      options:["~3 seconds","~12–13.5 seconds","~30 seconds","~60 seconds"],
+      answer:1, explain:"TUG >12–13.5 s is commonly used as a falls-risk threshold."},
+     {type:"mc", kind:"Norms", q:"The 6-minute walk test minimal clinically important difference (MCID) is around:",
+      options:["1–2 m","25–30 m","200 m","No such thing"],
+      answer:1, explain:"~25–30 m is a commonly cited MCID for the 6MWT — useful for judging real change."},
+     {type:"mc", kind:"Pain", q:"For an irritable painful condition, the most useful dosing input is:",
+      options:["Pain score at rest only","The 24-hour response to activity (does it settle by next day?)","Their step count","Grip strength"],
+      answer:1, explain:"Irritability = how long symptoms take to settle. The 24-h response tells you how cautious to be."},
+     {type:"mc", kind:"Practical", q:"How many tests should you usually run at baseline?",
+      options:["The entire battery, every time","2–4 that match the goal & condition","Just one, always TUG","None — go by feel"],
+      answer:1, explain:"Pick 2–4 relevant tests; retest every 4–6 weeks as progression evidence and motivation."},
+   ]},
+   { title:"Norms & cut-offs", icon:"📐", qs:[
+     {type:"mc", kind:"Cut-off", q:"TUG time that flags falls risk in older adults:",
+      options:[">3 s",">12–13.5 s",">25 s",">40 s"],
+      answer:1, explain:"TUG >12–13.5 s is a common falls-risk flag."},
+     {type:"mc", kind:"Cut-off", q:"30-second sit-to-stand below roughly how many reps is below norm for older adults?",
+      options:["<10 reps","<25 reps","<40 reps","Any number is fine"],
+      answer:0, explain:"<~10 reps in 30 s is below typical older-adult norms (varies by age/sex)."},
+     {type:"mc", kind:"Cut-off", q:"A 6-minute walk distance under which value suggests marked limitation?",
+      options:["<300 m","<800 m","<1200 m","<2000 m"],
+      answer:0, explain:"<300 m on the 6MWT indicates marked functional limitation."},
+     {type:"mc", kind:"Cut-off", q:"Single-leg stance under how many seconds is considered impaired?",
+      options:["<10 s","<60 s","<120 s","Never"],
+      answer:0, explain:"SLS <10 s is commonly used as an impaired-balance marker."},
+   ]},
+   { title:"Track progress", icon:"📊", qs:[
+     {type:"mc", kind:"Tracking", q:"How often should you retest your chosen outcome measures?",
+      options:["Every session","Every 4–6 weeks","Once a year","Never"],
+      answer:1, explain:"Retest every 4–6 weeks — evidence of progress and a motivation tool."},
+     {type:"mc", kind:"Meaningful change", q:"A change of about how many metres is meaningful on the 6MWT?",
+      options:["1–2 m","25–30 m","150 m","No threshold"],
+      answer:1, explain:"~25–30 m is a commonly cited MCID for the 6MWT."},
+     {type:"mc", kind:"Talk test", q:"On the talk test, 'moderate' intensity is when the client can:",
+      options:["Sing easily","Speak in full sentences but not sing","Not speak at all","Only whisper"],
+      answer:1, explain:"Full sentences but not singing ≈ moderate intensity."},
+     {type:"mc", kind:"Irritability", q:"\"How long do symptoms take to settle after activity?\" measures:",
+      options:["Strength","Irritability — how cautious to be with dosing","VO₂max","Flexibility"],
+      answer:1, explain:"The 24-hour settle time = irritability, which guides how cautiously you dose."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 5 · Dose & Progress 📈", sub:"Q5 + Q6", color:"var(--teal)", shadow:"var(--teal-d)", icon:"📈",
+  lessons:[
+   { title:"The safe first dose", icon:"🌱", qs:[
+     {type:"mc", kind:"Dosing", q:"Conservative first aerobic dose for a deconditioned older adult?",
+      options:["45 min continuous run","Walk 5–10 min at RPE 3–4/10, most days","HIIT intervals","1 hour cycling at threshold"],
+      answer:1, explain:"Short, easy, frequent. Build the habit before volume, volume before intensity."},
+     {type:"mc", kind:"Dosing", q:"Best first strength dose for a hypertension/cardiac-risk client?",
+      options:["Heavy 3-rep maxes with breath-holding","Lighter loads, higher reps (12–15), full breathing, no straining","Max isometric holds","Skip strength entirely"],
+      answer:1, explain:"Avoid Valsalva/heavy isometrics — lighter, higher-rep, full breathing keeps BP responses safer."},
+     {type:"mc", kind:"Diabetes", q:"A simple, high-value first dose for a T2DM client?",
+      options:["Fasted morning HIIT","10–15 min post-meal walking daily","One long weekend session","Evening sprints"],
+      answer:1, explain:"Post-meal walking blunts glucose spikes and lowers hypo risk — easy, daily, effective."},
+     {type:"mc", kind:"COPD", q:"Good entry-level aerobic format for breathless COPD?",
+      options:["Continuous 30-min jog","Interval walking: 1–2 min on / 1–2 min rest, dyspnoea 3–4/10","Max effort hill sprints","No aerobic at all"],
+      answer:1, explain:"Intervals let them accumulate work while keeping dyspnoea tolerable; add pursed-lip breathing."},
+   ]},
+   { title:"The 6 levers", icon:"🎚️", qs:[
+     {type:"multi", kind:"Tap all the levers", q:"Which of these are the progression levers?",
+      options:["More duration","More load","More complexity","Less rest"],
+      answers:[0,1,2,3], explain:"The 6 levers: more duration, load, range, complexity, intensity — and less rest. Pull ONE at a time."},
+     {type:"mc", kind:"Progression", q:"The golden rule when progressing is:",
+      options:["Push several variables at once for speed","Change ONE lever at a time","Always add intensity first","Never change anything"],
+      answer:1, explain:"One lever per change — otherwise you can't tell what caused a flare."},
+     {type:"mc", kind:"Progression", q:"You only progress if the last dose was tolerated, judged by:",
+      options:["They didn't complain","Symptoms back to baseline within ~24–48 h, no new red flags","They were sore for a week","They asked for more"],
+      answer:1, explain:"The 24–48 h rule: if it settles back to baseline and no red flags, the dose was OK to progress."},
+     {type:"mc", kind:"Mindset", q:"A client flares up after a big week. The right framing is:",
+      options:["They failed; start over","Regression is programming — drop one lever a notch and rebuild","Stop exercise permanently","Push through it"],
+      answer:1, explain:"Regression isn't failure — back off one lever, rebuild. Tell clients in advance so they don't quit."},
+     {type:"mc", kind:"Match lever to goal", q:"For an independence/falls goal, which lever matters most?",
+      options:["Maximal load","Complexity & range (balance challenge)","Less rest","Top-end intensity"],
+      answer:1, explain:"Falls/independence → progress complexity and range (reduce support, narrow base, add tasks)."},
+   ]},
+   { title:"Dose by condition", icon:"🧫", qs:[
+     {type:"mc", kind:"Osteoporosis", q:"A safe starting prescription for osteoporosis:",
+      options:["High-impact plyometrics","Progressive resistance 2×/wk (neutral spine) + daily balance + weight-bearing walking","Loaded sit-ups","Bed rest"],
+      answer:1, explain:"Progressive resistance with neutral spine, daily balance, weight-bearing walking; impact only once competent."},
+     {type:"mc", kind:"Knee OA", q:"Dosing rule for knee OA loading:",
+      options:["Pain must be zero always","Keep pain ≤4–5/10 and settling by next day; bike/pool if walking flares","Avoid all loading","Push to 9/10 pain"],
+      answer:1, explain:"Pain-acceptable loading that settles within 24 h; offload to bike/pool if needed."},
+     {type:"mc", kind:"Chronic LBP", q:"A good first dose for non-specific chronic low back pain:",
+      options:["Strict bed rest","Graded walking + 2–3 tolerated movements; educate hurt ≠ harm","Spinal traction only","High-load max lifts"],
+      answer:1, explain:"Graded movement plus reassurance that soreness settling by next day is fine."},
+     {type:"mc", kind:"Stroke", q:"Best early format post-stroke:",
+      options:["One long weekly session","Short, frequent, task-specific bouts with support as needed","Max-effort sprints","No exercise"],
+      answer:1, explain:"Short frequent task-specific practice; rails/support as needed; apply BP rules."},
+   ]},
+   { title:"Progress smart", icon:"🧠", qs:[
+     {type:"mc", kind:"Rate", q:"A sensible progression rate is about:",
+      options:["Double everything weekly","~10% or one step every 1–2 weeks if tolerated","Never change anything","As fast as possible"],
+      answer:1, explain:"~10% / one step per 1–2 weeks, only if the last dose was tolerated."},
+     {type:"mc", kind:"Anchor", q:"When meds or deconditioning make HR unreliable, anchor intensity to:",
+      options:["Heart rate anyway","RPE and the talk test","Speed only","Nothing"],
+      answer:1, explain:"Use RPE and the talk test when HR can't be trusted (e.g. beta-blockers)."},
+     {type:"mc", kind:"Balanced program", q:"Most programs should include something of each:",
+      options:["Aerobic, strength, balance","Only cardio","Only stretching","Only one lift"],
+      answer:0, explain:"Aerobic, strength and balance — weighted to the goal."},
+     {type:"mc", kind:"Mindset", q:"A client flares after a big week. You should:",
+      options:["Tell them they failed","Treat regression as programming — drop one lever, rebuild","Stop training them","Push harder next time"],
+      answer:1, explain:"Regression is part of the plan — back off one lever and rebuild."},
+     {type:"mc", kind:"Order", q:"The safest order to build early on:",
+      options:["Intensity first","Frequency → duration → intensity","Load → intensity → frequency","Random"],
+      answer:1, explain:"Habit (frequency), then volume (duration), then intensity."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 6 · Case Ward 🏥", sub:"Put it all together", color:"var(--gold)", shadow:"var(--gold-d)", icon:"🏥",
+  lessons:[
+   { title:"Margaret, 68 — T2DM", icon:"👩", qs:[
+     {type:"mc", kind:"Q1 Condition", scn:"<span class='who'>Margaret, 68</span>Type 2 diabetes <span class='hl'>on insulin</span>, high cholesterol, sedentary, BMI 33. Numb feet. Wants to play with grandkids.",
+      q:"What's the standout condition feature to flag first?",
+      options:["She needs more protein","Insulin → hypoglycaemia risk during exercise","She's just unfit","Nothing notable"],
+      answer:1, explain:"Insulin use makes hypoglycaemia the headline risk; numb feet hint at neuropathy too."},
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>Margaret, 68</span>T2DM on insulin, never had cardiac testing, BMI 33, high cholesterol.",
+      q:"Which danger deserves a high guard here?",
+      options:["Silent cardiac risk (multiple factors, never tested)","Overtraining","Boredom","Muscle soreness"],
+      answer:0, explain:"Sedentary, BMI 33, high cholesterol, never tested = possible silent cardiac disease. Start low; consider screening."},
+     {type:"mc", kind:"Q5 Dose", scn:"<span class='who'>Margaret, 68</span>Ready to start. On insulin.",
+      q:"Safest first aerobic dose?",
+      options:["30-min continuous brisk walk","10–15 min post-meal walking daily, carbs on hand, check BGL early","Morning fasted intervals","No walking, gym only"],
+      answer:1, explain:"Post-meal walking, short and daily, with carbs available and BGL checks early — safe and effective."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>Margaret, 68</span>Tolerating 10 min post-meal walks well for 2 weeks.",
+      q:"What's the first lever to pull?",
+      options:["Add sprint intervals","Extend duration (10 → 20 → 30 min) before intensity","Add heavy deadlifts","Cut rest in circuits"],
+      answer:1, explain:"Duration before intensity — grow the easy daily walk while glucose response stays stable."},
+   ]},
+   { title:"David, 59 — COPD", icon:"👨", qs:[
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>David, 59</span>Moderate COPD, ex-smoker. Frightened of breathlessness, stopped walking. Reliever inhaler.",
+      q:"What must be on hand and monitored?",
+      options:["A heart-rate strap only","His reliever + SpO₂ monitoring (stop if <88–90%)","Nothing special","A weight belt"],
+      answer:1, explain:"Keep his salbutamol available and watch SpO₂; desaturation <88–90% is the real danger, not the breathless feeling."},
+     {type:"mc", kind:"Q3 Goal", scn:"<span class='who'>David, 59</span>\"I want to stop feeling like a prisoner in my own house.\"",
+      q:"Beyond fitness, what's a key target you 'hear'?",
+      options:["Maximal strength","Confidence — breaking the fear-avoidance cycle","Sprint speed","Flexibility"],
+      answer:1, explain:"Fear is driving avoidance, so confidence is an explicit target alongside aerobic capacity and breathing control."},
+     {type:"mc", kind:"Q5 Dose", scn:"<span class='who'>David, 59</span>Deconditioned, breathless on one flight of stairs.",
+      q:"Best starting aerobic format?",
+      options:["Continuous 20-min walk","Interval walking 1–2 min on / 1–2 min rest, dyspnoea 3–4/10, pursed-lip breathing","Stair sprints","Rest only"],
+      answer:1, explain:"Intervals + pursed-lip breathing let him work while keeping breathlessness tolerable. Week-1 win = he leaves the house."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>David, 59</span>Coping with his walk intervals, SpO₂ holding ≥92%.",
+      q:"First lever to progress?",
+      options:["Add heavy lifting","Reduce rest so walking bouts join into continuous walking","Add hill sprints immediately","Stop the intervals"],
+      answer:1, explain:"Shorten rest first so bouts merge into continuous walking — then duration, then intensity, while SpO₂ holds."},
+   ]},
+   { title:"Susan, 72 — Osteoporosis", icon:"👵", qs:[
+     {type:"mc", kind:"Q1 Condition", scn:"<span class='who'>Susan, 72</span>Osteoporosis (T-score −2.8), wrist fracture last year from a fall. Cautious — \"doesn't trust her balance.\" Wants to keep gardening.",
+      q:"What's the defining constraint?",
+      options:["Cardiac output","Fracture risk + falls risk","Lung capacity","Blood sugar"],
+      answer:1, explain:"Low bone density plus a prior fall makes fracture & falls risk the defining constraints."},
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>Susan, 72</span>Wants to bend and lift in the garden.",
+      q:"Which is contraindicated early?",
+      options:["Neutral-spine hip hinge","Loaded spinal flexion & rotation","Supported balance work","Walking"],
+      answer:1, explain:"Avoid loaded spinal flexion/rotation (e.g. weighted toe-touches) — fracture risk."},
+     {type:"mc", kind:"Q5 Dose", scn:"<span class='who'>Susan, 72</span>Ready to start; technique novice.",
+      q:"Best starting prescription?",
+      options:["High-impact jumping","Progressive resistance 2×/wk (neutral spine) + daily balance + weight-bearing walking","Loaded sit-ups","Rest"],
+      answer:1, explain:"Progressive loading with neutral spine, daily balance, weight-bearing walking; impact only once strong & competent."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>Susan, 72</span>Tolerating her resistance program with good form.",
+      q:"Which lever for her balance goal?",
+      options:["Top-end intensity","Complexity: reduce hand support → narrower base → unstable surface","Less rest","Max load only"],
+      answer:1, explain:"Balance progresses by complexity — fewer points of support, narrower base, then unstable surfaces."},
+   ]},
+   { title:"Tom, 54 — Hypertension", icon:"🧔", qs:[
+     {type:"mc", kind:"Q1 Condition", scn:"<span class='who'>Tom, 54</span>Hypertension on a beta-blocker, strong family history, central weight. Has been doing heavy lifts with lots of breath-holding.",
+      q:"How do you set his aerobic intensity?",
+      options:["Target heart rate","RPE / talk test — beta-blocker blunts HR","Max HR test","Guess"],
+      answer:1, explain:"The beta-blocker blunts HR, so anchor intensity to RPE and the talk test."},
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>Tom, 54</span>Resting BP today 148/92. Loves heavy lifts with breath-holding.",
+      q:"Biggest immediate safety fix?",
+      options:["Add more heavy lifting","Stop the Valsalva / heavy straining — it spikes BP","Ban all exercise","Nothing needed"],
+      answer:1, explain:"Breath-holding on heavy lifts spikes BP — coach breathing and lighten loads. (If BP >180/110, don't start.)"},
+     {type:"mc", kind:"Q5 Dose", scn:"<span class='who'>Tom, 54</span>Starting a safer program.",
+      q:"Best strength prescription?",
+      options:["3-rep maxes","Lighter loads, higher reps (12–15), full breathing, no straining","Max isometric holds","Skip strength"],
+      answer:1, explain:"Higher-rep, lighter, full-breathing strength avoids the BP spikes of heavy Valsalva work."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>Tom, 54</span>Tolerating moderate aerobic + light strength well.",
+      q:"What progresses first?",
+      options:["Heaviest possible loads","Aerobic duration/frequency, then modest load with controlled breathing","Add breath-holding back","Max intensity now"],
+      answer:1, explain:"Build the aerobic base first (helps BP), then add modest load while breathing stays controlled; intensity last."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 7 · Case Ward II 🏥", sub:"Apply it — harder cases", color:"var(--gold)", shadow:"var(--gold-d)", icon:"🏥",
+  lessons:[
+   { title:"Aisha, 31 — Pregnancy", icon:"🤰", qs:[
+     {type:"mc", kind:"Q1 Condition", scn:"<span class='who'>Aisha, 31</span>24 weeks pregnant, previously a regular gym-goer, healthy pregnancy. Wants to keep training safely.",
+      q:"Which positional change matters now she's past ~16 weeks?",
+      options:["Spend more time lying on her back","Avoid prolonged supine (on-the-back) positions","Stop all exercise","Only train standing on one leg"],
+      answer:1, explain:"After ~16 weeks the uterus can compress the vena cava — avoid prolonged supine positions."},
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>Aisha, 31</span>Mid-session.",
+      q:"Which is a stop-and-seek-care warning sign?",
+      options:["Mild leg fatigue","Vaginal bleeding or fluid leakage","Feeling a bit warm","Light sweating"],
+      answer:1, explain:"Bleeding, fluid leak, regular contractions, chest pain or dizziness → stop and seek care."},
+     {type:"mc", kind:"Q5 Dose", scn:"<span class='who'>Aisha, 31</span>Planning her week.",
+      q:"Reasonable target for a healthy pregnancy?",
+      options:["No exercise at all","~150 min/week moderate (talk test) + strength & pelvic floor","Daily max-effort HIIT","One long session weekly"],
+      answer:1, explain:"~150 min/week moderate plus strength and pelvic-floor work."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>Aisha, 31</span>Into the third trimester.",
+      q:"As pregnancy progresses you:",
+      options:["Push intensity up steadily","Modify intensity & positions; let comfort and the talk test guide","Stop completely at 30 weeks","Add contact sport"],
+      answer:1, explain:"Adjust intensity and positions as the bump grows; comfort and symptoms guide it."},
+   ]},
+   { title:"Marco, 67 — PAD", icon:"🦶", qs:[
+     {type:"mc", kind:"Q1 Condition", scn:"<span class='who'>Marco, 67</span>Gets <span class='hl'>cramping calf pain after ~200 m of walking</span> that eases when he stops. Smoker, high cholesterol.",
+      q:"This calf pain is most likely:",
+      options:["A pulled muscle","Intermittent claudication (and a marker of CVD)","Cramp from dehydration only","Nothing to note"],
+      answer:1, explain:"Claudication — calf pain on walking that eases with rest; it flags widespread arterial disease."},
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>Marco, 67</span>Follow-up.",
+      q:"Which finding needs urgent vascular review?",
+      options:["Pain only when walking uphill","Foot pain at rest or a non-healing wound","Mild calf ache that eases with rest","Tired legs after a long walk"],
+      answer:1, explain:"Rest pain / non-healing wounds suggest critical limb ischaemia → urgent referral."},
+     {type:"mc", kind:"Q5 Dose", scn:"<span class='who'>Marco, 67</span>Starting a program.",
+      q:"Best exercise prescription?",
+      options:["Avoid walking entirely","Walk to moderate claudication pain, rest, repeat — 30+ min, most days","Sprint intervals to exhaustion","Only upper-body work"],
+      answer:1, explain:"Supervised walking to moderate claudication pain is the treatment — it improves walking distance."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>Marco, 67</span>Tolerating his walking program.",
+      q:"You progress mainly by:",
+      options:["Adding heavy leg press","Increasing walking time and distance","Cutting all rest","Adding breath-holding"],
+      answer:1, explain:"Build walking time and distance as pain-free distance improves."},
+   ]},
+   { title:"Jess, 29 — Long COVID", icon:"🦠", qs:[
+     {type:"mc", kind:"Q1 Screen", scn:"<span class='who'>Jess, 29</span>5 months after COVID: fatigue and 'crashes' for <span class='hl'>about 2 days after she overdoes things</span>. Keen to 'exercise back to normal'.",
+      q:"Your essential first step is to:",
+      options:["Start a graded exercise plan immediately","Screen for post-exertional malaise (PESE/PEM)","Test her 1RM","Prescribe HIIT"],
+      answer:1, explain:"Delayed crashes suggest PESE — screen for it before any graded exercise."},
+     {type:"mc", kind:"Q2 Approach", scn:"<span class='who'>Jess, 29</span>Post-exertional malaise is confirmed.",
+      q:"Given her delayed crashes, you should:",
+      options:["Push through with graded exercise","Pace within her energy envelope — don't provoke crashes","Ignore the crashes","Add daily intervals"],
+      answer:1, explain:"With PESE, avoid provoking crashes — pace and titrate to symptoms."},
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>Jess, 29</span>She mentions some symptoms on exertion.",
+      q:"Which warrants medical review before progressing?",
+      options:["Mild tiredness","Chest pain, exertional desaturation or marked palpitations","A good night's sleep","Slight breathlessness on stairs that settles quickly"],
+      answer:1, explain:"Chest pain, syncope, desaturation or marked palpitations → review first."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>Jess, 29</span>Finding a sustainable level.",
+      q:"You judge progression by:",
+      options:["How hard a single session felt","The delayed / next-day response — a crash means pull back","Her step count alone","Pushing until symptoms appear"],
+      answer:1, explain:"Watch the delayed response; a crash means you went too far — pull back and pace."},
+   ]},
+   { title:"Raju, 58 — MS", icon:"🌀", qs:[
+     {type:"mc", kind:"Q1 Condition", scn:"<span class='who'>Raju, 58</span>Relapsing MS with fatigue and balance issues. He feels <span class='hl'>much worse when he gets hot</span>. Wants to stay mobile.",
+      q:"His heat sensitivity means you should:",
+      options:["Train him in the heat to adapt","Keep him cool — cooling aids, morning sessions, hydration","Avoid all aerobic work","Use saunas"],
+      answer:1, explain:"Overheating (Uhthoff's) transiently worsens MS symptoms — keep him cool."},
+     {type:"mc", kind:"Q2 Danger", scn:"<span class='who'>Raju, 58</span>He reports new, worsening weakness over several days.",
+      q:"This likely signals a relapse, so you:",
+      options:["Push intensity to fight it","Reduce load and liaise with his team","Discharge him","Ignore it and continue"],
+      answer:1, explain:"During a relapse, back off the load and liaise with the treating team; rebuild after."},
+     {type:"mc", kind:"Q5 Dose", scn:"<span class='who'>Raju, 58</span>Stable period, starting a program.",
+      q:"Best program shape?",
+      options:["High-intensity only","Aerobic + resistance + balance, moderate, cool environment, autoregulated to fatigue","Balance work only","No structure needed"],
+      answer:1, explain:"A balanced moderate program in a cool environment, dosed to his fatigue."},
+     {type:"mc", kind:"Q6 Progress", scn:"<span class='who'>Raju, 58</span>Over the coming months.",
+      q:"You should expect:",
+      options:["Perfectly linear gains","Gradual progress with fluctuation around relapses","No change ever","Rapid decline from exercise"],
+      answer:1, explain:"Progress gradually and expect fluctuation tied to relapses."},
+   ]},
+  ]
+ },
+];
+
+/* ============================================================
+   LEARN — condition courses (teaching cards + a quick check)
+   ============================================================ */
+const LEARN = [
+ { id:"htn", name:"High Blood Pressure", icon:"🩸", color:"var(--red)", shadow:"var(--red-d)",
+   cards:[
+     {t:"What it is", b:"Blood pressure is the force of blood against the artery walls. <b>Hypertension</b> means it stays high (generally ≥140/90 in clinic). It's usually symptomless — the 'silent' risk factor — but over time it raises the risk of stroke, heart attack, and kidney and eye damage. Exercise is a frontline treatment."},
+     {t:"What happens during exercise", b:"Systolic BP normally rises with effort while diastolic stays fairly flat. In hypertension that rise can be <b>exaggerated</b>. Heavy isometric work and breath-holding (<b>Valsalva</b>) spike BP sharply. Regular aerobic training can lower resting BP by around <b>5–7 mmHg</b> — a meaningful drop."},
+     {t:"Medications that matter", b:"<b>Beta-blockers</b> blunt heart rate, so HR is an unreliable intensity gauge — use RPE and the talk test instead. Some BP medicines (vasodilators, ACE inhibitors) can cause dizziness or post-exercise drops in BP, so cool down gradually and have clients rise slowly."},
+     {t:"Safety & red flags", b:"Don't start if resting BP is <b>&gt;180/110</b>. At 160–179 systolic, keep it light, monitor, and flag to the GP. <b>Stop</b> for chest pain, severe headache, dizziness or marked breathlessness. Avoid heavy isometrics and breath-holding while BP is uncontrolled."},
+     {t:"Starting dose & progression", b:"Aerobic 10–20 min most days at RPE 3–4/10, building toward 30+ min. Strength with <b>lighter loads, higher reps (12–15)</b> and full breathing — no straining. Progress aerobic duration and frequency first; track the BP trend as your readiness signal."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"For a client on a beta-blocker, how do you set aerobic intensity?",
+      options:["Target heart rate","RPE / talk test","Max HR test","Step count"], answer:1, explain:"Beta-blockers blunt HR — anchor to RPE and the talk test."},
+     {type:"mc", kind:"Check", q:"Resting BP above which value means no exercise today?",
+      options:["140/90","160/100","180/110","200/120"], answer:2, explain:">180/110 mmHg → no exercise today, refer."},
+     {type:"mc", kind:"Check", q:"Which is the best exercise modality for lowering resting BP?",
+      options:["Heavy isometric holds","Regular aerobic training","Breath-holding lifts","Maximal sprints only"], answer:1, explain:"Aerobic training gives the strongest BP-lowering effect (~5–7 mmHg)."},
+     {type:"mc", kind:"Check", q:"What should you avoid while BP is uncontrolled?",
+      options:["Light walking","Valsalva / heavy isometric straining","Full breathing","Cool-downs"], answer:1, explain:"Breath-holding and heavy isometrics spike BP sharply."},
+   ]},
+ { id:"t2dm", name:"Type 2 Diabetes", icon:"🍬", color:"var(--blue)", shadow:"var(--blue-d)",
+   cards:[
+     {t:"What it is", b:"The body can't use insulin effectively (<b>insulin resistance</b>), so blood glucose runs high. Over time this damages nerves, eyes, kidneys and blood vessels. Exercise is powerful medicine: working muscles take up glucose and improve control for <b>24–48 hours</b> afterward."},
+     {t:"What happens during exercise", b:"Both aerobic and resistance training lower blood glucose, and the effect can last more than a day. <b>Post-meal walking</b> blunts the after-meal glucose spike. The main watch-out is <b>hypoglycaemia</b> in people on insulin or sulfonylureas."},
+     {t:"Medications that matter", b:"<b>Insulin</b> and <b>sulfonylureas</b> can cause hypoglycaemia with exercise — have fast-acting carbs on hand and check BGL pre/post early on. <b>Metformin</b> alone rarely causes hypos. Always ask what they take before dosing exercise."},
+     {t:"Complications to screen", b:"Check the <b>feet</b> (neuropathy → blisters, ulcers, footwear, and reduced balance). Be aware of eye (retinopathy) and kidney disease, and <b>silent cardiac risk</b> — many have undiagnosed cardiovascular disease, so start low and screen."},
+     {t:"Safety, dose & progression", b:"<b>Hypo</b> (shaky, sweaty, confused, BGL &lt;4.0): stop, 15 g fast carbs, retest in 15 min. Defer if BGL &lt;5.0 (carbs first) or &gt;15 with symptoms. Start with 10–15 min post-meal walks daily plus strength 2×/week; build duration before intensity."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Which medications most raise hypoglycaemia risk with exercise?",
+      options:["Metformin alone","Insulin and sulfonylureas","Statins","Antihistamines"], answer:1, explain:"Insulin and sulfonylureas can cause hypos; metformin alone rarely does."},
+     {type:"mc", kind:"Check", q:"A client is shaky and confused; BGL is 3.4. First action?",
+      options:["Keep going to burn it off","Stop, 15 g fast carbs, retest in 15 min","Give protein","Lie them down and wait"], answer:1, explain:"Hypoglycaemia <4.0: stop, 15 g fast carbs, retest in 15 min."},
+     {type:"mc", kind:"Check", q:"Why is post-meal walking especially useful in T2DM?",
+      options:["It builds max strength","It blunts the after-meal glucose spike","It raises blood pressure","It replaces medication"], answer:1, explain:"Walking after meals lowers the post-meal glucose rise and is easy to sustain."},
+     {type:"mc", kind:"Check", q:"Why check the feet before exercising a diabetic client?",
+      options:["For shoe size only","Neuropathy risks blisters/ulcers and affects balance","It's not necessary","To measure height"], answer:1, explain:"Neuropathy means foot integrity and balance both need attention."},
+   ]},
+ { id:"cvd", name:"Cardiovascular Disease", icon:"🫀", color:"var(--purple)", shadow:"var(--purple-d)",
+   cards:[
+     {t:"What it is", b:"Cardiovascular disease covers conditions of the heart and blood vessels. <b>Coronary heart disease</b> is narrowing of the arteries that supply the heart (atherosclerosis), which can cause <b>angina</b> or a <b>heart attack (MI)</b>. Supervised exercise (cardiac rehab) reduces mortality and improves function after an event."},
+     {t:"What happens during exercise", b:"The heart works harder and needs more oxygen. In coronary disease the narrowed arteries may not keep up, causing <b>angina</b> (chest tightness) under exertion. Graded, monitored aerobic exercise raises the threshold at which symptoms appear."},
+     {t:"Medications that matter", b:"<b>Beta-blockers</b> (HR blunted → use RPE). <b>GTN</b> (glyceryl trinitrate) spray for angina should be on hand — angina not relieved by rest or GTN is an emergency. Antiplatelets/anticoagulants mean a little more bruising and bleeding awareness."},
+     {t:"Safety & red flags", b:"<b>Stop</b> for chest pain or pressure, pain radiating to jaw/arm, undue breathlessness, dizziness or palpitations. Chest pain not settling in minutes (or unrelieved by GTN) → <b>000</b>. Know their stable angina pattern and the effort that triggers it."},
+     {t:"Starting dose & progression", b:"Begin light-to-moderate aerobic (RPE 3–4/10), often interval-style early. <b>Warm-up and cool-down</b> matter — avoid abrupt stops. Strength light, higher reps, full breathing. Progress slowly and symptom-guided, ideally alongside cardiac rehab."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Angina that isn't relieved by rest or GTN means:",
+      options:["Keep exercising gently","Call 000 — possible heart attack","Give water","Stretch the chest"], answer:1, explain:"Unrelieved angina is a medical emergency → 000."},
+     {type:"mc", kind:"Check", q:"What should be available for a client with angina?",
+      options:["GTN spray","Extra weights","A foam roller","Nothing in particular"], answer:0, explain:"Their GTN (glyceryl trinitrate) should be on hand."},
+     {type:"mc", kind:"Check", q:"Why do warm-up and cool-down matter especially in CVD?",
+      options:["They don't","Abrupt starts/stops stress the heart — ease in and out","To save time","Only for flexibility"], answer:1, explain:"Gradual warm-up/cool-down avoids sudden cardiac demand and post-exercise drops."},
+   ]},
+ { id:"hf", name:"Heart Failure", icon:"💗", color:"var(--teal)", shadow:"var(--teal-d)",
+   cards:[
+     {t:"What it is", b:"The heart can't pump enough blood for the body's needs (often a reduced ejection fraction). It causes fatigue, breathlessness and fluid retention (<b>oedema</b>). Exercise training improves symptoms, capacity and quality of life — it's evidence-based, not dangerous, when dosed well."},
+     {t:"What happens during exercise", b:"Reduced cardiac output limits capacity, so clients fatigue and become breathless sooner. Much of the benefit of training comes from <b>peripheral</b> adaptations (more efficient muscles), improving tolerance even when the pump itself changes little."},
+     {t:"Daily monitoring", b:"Watch for <b>decompensation</b>: rapid weight gain (<b>≥2 kg in ~3 days</b>), worsening swelling, or new <b>orthopnoea</b> (breathlessness lying flat) / waking breathless at night. These mean hold exercise and seek review."},
+     {t:"Safety & red flags", b:"Don't train through decompensation signs. <b>Stop</b> for marked breathlessness, dizziness or palpitations. Avoid heavy straining. Keep intensity <b>moderate and symptom-guided</b> throughout."},
+     {t:"Starting dose & progression", b:"Low and slow: short aerobic bouts (even intervals) at RPE 3–4/10, plus light strength. Progress <b>duration before intensity</b>, using daily weight and symptoms as the readiness gate."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Which flags possible decompensation in heart failure?",
+      options:["Weight gain ≥2 kg in ~3 days + new swelling","Mild calf soreness","Feeling thirsty","A good night's sleep"], answer:0, explain:"Rapid weight gain and new oedema/orthopnoea suggest decompensation → review."},
+     {type:"mc", kind:"Check", q:"Is exercise safe in stable heart failure?",
+      options:["No, never","Yes — it improves symptoms and capacity when dosed well","Only for athletes","Only in hospital"], answer:1, explain:"Training is evidence-based and beneficial when appropriately dosed."},
+     {type:"mc", kind:"Check", q:"What's the right intensity approach?",
+      options:["Maximal effort","Moderate and symptom-guided","Heavy isometrics","As hard as possible"], answer:1, explain:"Keep it moderate and guided by symptoms; progress duration first."},
+   ]},
+ { id:"copd", name:"COPD", icon:"🫁", color:"var(--gold)", shadow:"var(--gold-d)",
+   cards:[
+     {t:"What it is", b:"Chronic obstructive pulmonary disease (emphysema / chronic bronchitis), usually from smoking. Airflow limitation causes breathlessness, especially on exertion. <b>Pulmonary rehab</b> (exercise) is one of the most effective treatments for symptoms and quality of life."},
+     {t:"What happens during exercise", b:"Ventilatory limitation and <b>dynamic hyperinflation</b> cause breathlessness, and some clients <b>desaturate</b> (SpO₂ drops). Breathlessness (dyspnoea) is distressing but isn't itself dangerous — <b>desaturation</b> is the thing to monitor."},
+     {t:"Breathing strategies", b:"<b>Pursed-lip breathing</b> helps control breathlessness and aids recovery. <b>Interval</b> formats let clients accumulate work with less dyspnoea. Reassurance breaks the fear-avoidance spiral that shrinks their world."},
+     {t:"Safety & red flags", b:"Monitor SpO₂ — stop/rest if <b>&lt;88–90%</b> (or per medical advice). Keep the <b>reliever inhaler</b> (e.g. salbutamol) on hand. Stop for severe breathlessness with inability to speak. Watch for comorbid cardiac risk given smoking history."},
+     {t:"Starting dose & progression", b:"Interval walking 1–2 min on / 1–2 min rest, dyspnoea 3–4/10; seated or standing strength as an entry point. Progress by <b>reducing rest</b> (bouts merge into continuous walking), then duration, then intensity — keeping SpO₂ up."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Below which SpO₂ do you stop and recover (rule of thumb)?",
+      options:["98%","94%","88–90%","75%"], answer:2, explain:"SpO₂ <88–90% (or per medical guidance) = stop/rest."},
+     {type:"mc", kind:"Check", q:"In COPD, which is the real danger signal?",
+      options:["Feeling breathless","Desaturation (falling SpO₂)","Mild leg fatigue","Sweating"], answer:1, explain:"Dyspnoea is distressing but desaturation is what you monitor and act on."},
+     {type:"mc", kind:"Check", q:"Why use interval walking as an entry format?",
+      options:["It's faster","It lets them accumulate work with less breathlessness","It builds max strength","It avoids all effort"], answer:1, explain:"Intervals accumulate work while keeping dyspnoea tolerable."},
+   ]},
+ { id:"oa", name:"Osteoarthritis", icon:"🦵", color:"var(--green)", shadow:"var(--green-d)",
+   cards:[
+     {t:"What it is", b:"A wear-and-repair imbalance in a joint (commonly knee or hip): cartilage change, pain and stiffness. <b>Imaging 'degeneration' is common</b> and doesn't equal disability. Exercise is first-line treatment — it reduces pain and improves function, and <b>strength is the cornerstone</b>."},
+     {t:"Pain ≠ damage", b:"A key message: hurting during or after sensible loading does <b>not</b> mean you're damaging the joint. Avoiding all activity weakens muscle and worsens things. Strong muscles protect and offload the joint."},
+     {t:"What happens during exercise", b:"Load tolerance varies day to day; some sessions flare. Manage it with <b>dose</b>, not avoidance. Low-impact options (bike, pool) help when walking flares the joint, so the client keeps moving."},
+     {t:"Safety & red flags", b:"Generally very safe. Watch for a truly <b>locked or giving-way</b> knee, or a <b>hot, swollen, red</b> joint → refer. Screen cardiometabolic risk before vigorous work, as many clients are deconditioned."},
+     {t:"Starting dose & progression", b:"<b>Pain-acceptable loading</b>: keep pain ≤4–5/10 during and settling by the next day. Strength 2×/week starting at 1–2 sets. Progress <b>load first</b> (the main driver), then duration, guided by the 24-hour response."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Best way to frame pain in knee OA?",
+      options:["Pain means damage — stop","Pain ≠ damage; strength is the treatment","Avoid all loading","Only do cardio"], answer:1, explain:"Hurt ≠ harm — progressive strengthening protects the joint."},
+     {type:"mc", kind:"Check", q:"What's the dosing rule for loading an arthritic joint?",
+      options:["Pain must be zero","Keep pain ≤4–5/10 and settling by next day","Push to 9/10 pain","Never load it"], answer:1, explain:"Pain-acceptable loading that settles within 24 h."},
+     {type:"mc", kind:"Check", q:"Which finding should prompt referral?",
+      options:["Mild stiffness in the morning","A hot, swollen, red joint","Some next-day soreness","Improved strength"], answer:1, explain:"A hot, swollen, red joint (or locking/giving-way) needs review."},
+   ]},
+ { id:"osteo", name:"Osteoporosis", icon:"🦴", color:"var(--blue)", shadow:"var(--blue-d)",
+   cards:[
+     {t:"What it is", b:"Low bone density and quality lead to fragile bones and <b>fracture risk</b> (T-score ≤ −2.5). It's often silent until a fragility fracture. Exercise can maintain or improve bone and — crucially — <b>cut falls</b>, which trigger most fractures."},
+     {t:"What bone needs", b:"<b>Progressive resistance training</b> and weight-bearing / impact loading stimulate bone. <b>Balance training</b> reduces falls. The loading must be progressive but technique-safe — challenge without recklessness."},
+     {t:"The big don'ts", b:"Avoid <b>loaded spinal flexion and rotation</b> (e.g. weighted sit-ups, loaded toe-touches, twisting under load) — these raise vertebral fracture risk. Add high-impact work only once strength and technique are solid."},
+     {t:"Safety & red flags", b:"New, sudden <b>back pain</b> may be a vertebral fracture → refer. A prior fragility fracture plus falls means high risk — train balance with support nearby and remove hazards."},
+     {t:"Starting dose & progression", b:"Progressive resistance 2×/week (hip hinge with <b>neutral spine</b>, squat, press, row), daily balance, and weight-bearing walking. Progress load within good technique; introduce impact late."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Which is contraindicated early in osteoporosis?",
+      options:["Neutral-spine hip hinge","Loaded spinal flexion & rotation","Balance work","Walking"], answer:1, explain:"Avoid loaded spinal flexion/rotation — vertebral fracture risk."},
+     {type:"mc", kind:"Check", q:"What does bone actually need from exercise?",
+      options:["Rest and avoidance","Progressive resistance + balance training","Only stretching","High-impact from day one"], answer:1, explain:"Progressive loading builds bone; balance cuts the falls that cause fractures."},
+     {type:"mc", kind:"Check", q:"New sudden back pain in an osteoporotic client:",
+      options:["Load it harder","Refer — possible vertebral fracture","Ignore it","Stretch it out"], answer:1, explain:"Sudden back pain may be a vertebral fracture → refer."},
+   ]},
+ { id:"stroke", name:"Stroke", icon:"🧠", color:"var(--purple)", shadow:"var(--purple-d)",
+   cards:[
+     {t:"What it is", b:"An interrupted blood supply to part of the brain (a clot or a bleed) damages the functions that area controlled — often one-sided weakness, balance, or speech. Recovery harnesses <b>neuroplasticity</b>, and <b>task-specific practice</b> drives it."},
+     {t:"What happens during exercise", b:"Hemiparesis, altered tone/spasticity and balance deficits raise <b>falls risk</b>. Many clients also have hypertension and cardiac comorbidity, so apply BP and cardiac rules. Fatigue is common — build in recovery."},
+     {t:"Principles", b:"Practise the <b>actual goal task</b> — sit-to-stand, stepping, walking — repetitively; this carries over best. Use short, frequent bouts, with rails or support as needed for safety and confidence."},
+     {t:"Safety & red flags", b:"New neuro signs (face droop, slurred speech, sudden weakness) → <b>FAST → 000</b> (possible new stroke). Watch <b>orthostatic hypotension</b> on transitions — rise slowly. Keep falls precautions throughout."},
+     {t:"Starting dose & progression", b:"Short, frequent task-specific bouts with support; moderate intensity (BP). Progress by <b>reducing support</b> and adding real-world complexity and terrain, then a little speed — as long as it stays safe."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"What drives the most carry-over after stroke?",
+      options:["Generic machine circuits","Task-specific practice of the goal","Passive stretching","Bed rest"], answer:1, explain:"Repetitive task-specific practice (sit-to-stand, stepping, walking)."},
+     {type:"mc", kind:"Check", q:"A client develops face droop and slurred speech. You:",
+      options:["Give juice","FAST → call 000","Carry on seated","Stretch the neck"], answer:1, explain:"New one-sided neuro signs = possible new stroke → 000."},
+     {type:"mc", kind:"Check", q:"Which lever progresses a post-stroke walking goal?",
+      options:["Maximal load","Complexity — reduce support, add terrain","Less rest only","Breath-holding"], answer:1, explain:"Reduce support and add real-world complexity, then a little speed."},
+   ]},
+ { id:"parkinsons", name:"Parkinson's", icon:"🤲", color:"var(--teal)", shadow:"var(--teal-d)",
+   cards:[
+     {t:"What it is", b:"A progressive neurodegenerative disorder (loss of dopamine) causing <b>bradykinesia</b> (slowness), rigidity, tremor, and later postural instability and <b>freezing of gait</b>. Exercise may be neuroprotective and clearly improves mobility, balance and quality of life."},
+     {t:"Symptom fluctuation", b:"Symptoms swing with medication: better in the <b>'ON'</b> window (after a dose) and worse when <b>'OFF'</b>. Train in the ON window for safety and movement quality."},
+     {t:"Principles", b:"Use <b>big-amplitude</b> movement (think large steps and reaches), <b>cueing</b> (visual or rhythmic auditory cues) for gait and freezing, and plenty of balance work. Aerobic (treadmill/bike) and resistance training both help."},
+     {t:"Safety & red flags", b:"Postural instability plus freezing means <b>falls risk</b> → support nearby and manage doorway/turn triggers. <b>Orthostatic hypotension</b> (from medication) is common → never rush transitions; rise slowly."},
+     {t:"Starting dose & progression", b:"In the ON window: big-amplitude movement and cued balance with support, plus aerobic as tolerated. Progress <b>complexity</b> (turns, dual-tasking) and amplitude, keeping falls precautions in place."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"When should you ideally train a Parkinson's client?",
+      options:["Before any medication","In the ON-medication window","Only at night","It doesn't matter"], answer:1, explain:"Train in the ON window for safety and movement quality."},
+     {type:"mc", kind:"Check", q:"A hallmark approach for Parkinson's gait and movement is:",
+      options:["Small, slow movements","Big-amplitude movement + cueing","Avoid balance work","Train only when OFF"], answer:1, explain:"Big-amplitude, cued movement plus balance training."},
+     {type:"mc", kind:"Check", q:"Why change positions slowly with these clients?",
+      options:["To save energy","Orthostatic hypotension risk from meds","It looks better","No real reason"], answer:1, explain:"PD meds often cause orthostatic drops — rise slowly to avoid falls."},
+   ]},
+ { id:"cancer", name:"Cancer & Exercise", icon:"🎗️", color:"var(--red)", shadow:"var(--red-d)",
+   cards:[
+     {t:"What it is", b:"Exercise during and after cancer treatment is <b>safe and beneficial</b> for most people: it reduces fatigue, preserves strength and function, and improves quality of life. Programs flex around the treatment cycle and side effects."},
+     {t:"Treatment effects", b:"Chemo and radiation can cause fatigue, <b>anaemia</b>, <b>neutropenia</b> (infection risk) and peripheral <b>neuropathy</b>. Blood counts fluctuate, so capacity varies day to day. Surgery and some treatments carry site-specific precautions."},
+     {t:"Day-to-day flexing", b:"<b>Autoregulate</b>: a good day means a bit more, a bad day means gentle movement or rest. During treatment the goal is often <b>maintenance</b> — staying 'flat' through a hard cycle is a genuine win."},
+     {t:"Safety & red flags", b:"On low-count (<b>neutropenic</b>) days, avoid high intensity and crowded/germy settings; <b>fever</b> → medical review. <b>Anaemia</b> → reduce load, watch dizziness/breathlessness. <b>Bone metastases</b> → no high-impact at those sites. Liaise with the oncology team."},
+     {t:"Starting dose & progression", b:"Short, flexible bouts (5–10 min) plus light strength, scaled to the day. Use stable, supported balance work if there's neuropathy. Progress volume on good stretches, and expect to regress around treatment cycles."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Is exercise safe during cancer treatment?",
+      options:["No, rest completely","Yes — safe and beneficial for most, flexed to the day","Only after all treatment ends","Only competitive sport"], answer:1, explain:"Exercise during treatment reduces fatigue and preserves function for most."},
+     {type:"mc", kind:"Check", q:"On a neutropenic (low white-cell) day you should:",
+      options:["Do your hardest session","Avoid high intensity and crowded/germy settings","Cancel exercise forever","Ignore it"], answer:1, explain:"Lower intensity and infection exposure; fever → review."},
+     {type:"mc", kind:"Check", q:"With known bone metastases, avoid:",
+      options:["All movement","High-impact loading at the metastatic sites","Light walking","Breathing exercises"], answer:1, explain:"No high-impact at metastatic sites — fracture risk."},
+   ]},
+ { id:"asthma", name:"Asthma", icon:"🌬️", color:"var(--teal)", shadow:"var(--teal-d)",
+   cards:[
+     {t:"What it is", b:"<b>Asthma</b> is reversible narrowing of the airways — bronchospasm and inflammation — triggered by exercise, cold or dry air, allergens or infection. <b>Exercise-induced bronchoconstriction (EIB)</b> is common. With good control, exercise is encouraged and beneficial."},
+     {t:"What happens during exercise", b:"EIB typically comes on <b>5–15 minutes</b> into or after exercise. <b>Cold, dry air</b> makes it worse; warm, humid air (like swimming) is better tolerated. A proper <b>warm-up reduces EIB</b> by triggering a refractory period."},
+     {t:"Medications that matter", b:"A <b>reliever</b> (short-acting beta-agonist such as salbutamol) taken <b>~15 min before</b> exercise can prevent EIB. <b>Preventers</b> (inhaled corticosteroids) control the underlying inflammation. Always keep the reliever on hand."},
+     {t:"Safety & red flags", b:"Stop and use the reliever for wheeze, chest tightness or a cough that limits exercise. A <b>severe attack</b> — can't speak in sentences, reliever not helping, blue lips — is an emergency → <b>000</b>. Don't exercise during an attack or when poorly controlled."},
+     {t:"Starting dose & progression", b:"Use an extended <b>warm-up</b>, interval formats, and warm/humid environments where possible. Avoid known triggers (cold dry air, high pollen). Progress gradually — well-controlled asthmatics can train to a high level."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"When should a reliever be taken to prevent EIB?",
+      options:["After exercise only","About 15 min before exercise","Never","Only mid-session"], answer:1, explain:"A reliever ~15 min pre-exercise helps prevent exercise-induced bronchoconstriction."},
+     {type:"mc", kind:"Check", q:"How does a proper warm-up affect EIB?",
+      options:["Worsens it","Reduces it (refractory period)","No effect","Triggers an attack"], answer:1, explain:"Warming up reduces EIB via a refractory period."},
+     {type:"mc", kind:"Check", q:"Severe attack: can't speak, reliever not working. You:",
+      options:["Keep exercising lightly","Call 000","Offer water","Stretch the chest"], answer:1, explain:"A severe attack unresponsive to reliever is an emergency → 000."},
+   ]},
+ { id:"ckd", name:"Chronic Kidney Disease", icon:"🫘", color:"var(--purple)", shadow:"var(--purple-d)",
+   cards:[
+     {t:"What it is", b:"<b>Chronic kidney disease</b> is a progressive loss of kidney function. It brings high cardiovascular risk, anaemia, fatigue, muscle wasting and bone-mineral problems. Exercise is safe and beneficial across all stages, <b>including on dialysis</b>."},
+     {t:"What happens during exercise", b:"Capacity is often reduced by anaemia and deconditioning, and <b>cardiovascular comorbidity is high</b>. Resistance training helps counter muscle wasting; aerobic training improves capacity and cardiovascular risk."},
+     {t:"Key considerations", b:"Protect the <b>fistula / dialysis access arm</b> — no heavy loading and no BP cuff on that arm. Be mindful of fluid and electrolyte shifts and blood-pressure swings around dialysis sessions."},
+     {t:"Safety & red flags", b:"Watch for cardiac symptoms (CV risk is high), signs of fluid overload (breathlessness, swelling) and excessive fatigue. Avoid heavy loading through the access arm."},
+     {t:"Starting dose & progression", b:"Aerobic plus resistance at <b>moderate</b> intensity, starting low. For dialysis patients, exercise is often best on <b>non-dialysis days</b> or in the first half of a session. Progress gradually as tolerated."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"What must you protect on a dialysis patient?",
+      options:["The fistula/access arm — no BP cuff or heavy load","Their dominant hand","Their ankles","Nothing special"], answer:0, explain:"Avoid BP cuffs and heavy loading on the fistula/access arm."},
+     {type:"mc", kind:"Check", q:"Is exercise safe in CKD, including on dialysis?",
+      options:["No","Yes — safe and beneficial across stages","Only pre-dialysis","Only for transplant patients"], answer:1, explain:"Exercise is safe and beneficial at all CKD stages, including dialysis."},
+     {type:"mc", kind:"Check", q:"Which comorbidity risk is especially high in CKD?",
+      options:["Cardiovascular disease","Hay fever","Tendinopathy","Vertigo"], answer:0, explain:"CKD carries high cardiovascular risk — watch for cardiac symptoms."},
+   ]},
+ { id:"pad", name:"Peripheral Arterial Disease", icon:"🦶", color:"var(--red)", shadow:"var(--red-d)",
+   cards:[
+     {t:"What it is", b:"<b>Peripheral arterial disease</b> is atherosclerosis narrowing the leg arteries, reducing blood flow. The classic symptom is <b>intermittent claudication</b> — cramping calf pain on walking that eases with rest. It signals widespread cardiovascular disease."},
+     {t:"What happens during exercise", b:"Walking brings on claudication pain as muscle demand outstrips supply. Counter-intuitively, <b>supervised walking to moderate claudication pain</b> is the treatment — it builds collateral flow and markedly improves pain-free walking distance."},
+     {t:"Medications & considerations", b:"Antiplatelets, statins and BP medicines manage the underlying disease. <b>Foot care</b> matters — poor circulation means wounds heal slowly. Manage overall cardiovascular risk."},
+     {t:"Safety & red flags", b:"<b>Rest pain</b> (foot pain at rest), non-healing wounds, or a cold/pale foot suggest <b>critical limb ischaemia</b> → urgent vascular review. High CV risk also means watching for cardiac symptoms."},
+     {t:"Starting dose & progression", b:"Walk to <b>moderate</b> claudication pain (about 3 out of 5), rest until it eases, then repeat — aiming for <b>30+ minutes</b>, most days. Progress walking time and distance as tolerance improves."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Supervised walking in PAD is best described as:",
+      options:["Dangerous, avoid it","The treatment — it improves walking distance","Pointless","Only for fitness"], answer:1, explain:"Walking to moderate claudication pain is the evidence-based treatment."},
+     {type:"mc", kind:"Check", q:"How do you dose the walking?",
+      options:["Avoid all pain","Walk to moderate claudication pain, rest, repeat","Sprint until exhausted","Walk pain-free only"], answer:1, explain:"Walk to moderate pain, rest until it eases, repeat — 30+ min most days."},
+     {type:"mc", kind:"Check", q:"Foot pain at rest or a non-healing wound means:",
+      options:["Push harder","Urgent vascular review — possible critical ischaemia","Ignore it","More walking"], answer:1, explain:"Rest pain / non-healing wounds suggest critical limb ischaemia → urgent referral."},
+   ]},
+ { id:"pregnancy", name:"Pregnancy", icon:"🤰", color:"var(--green)", shadow:"var(--green-d)",
+   cards:[
+     {t:"What it is", b:"In a <b>healthy pregnancy</b>, exercise is recommended and safe. It improves fitness and mood and reduces the risk of gestational diabetes, pre-eclampsia and excessive weight gain. The guide is about <b>150 min/week</b> of moderate activity."},
+     {t:"What happens during exercise", b:"Heart rate and blood volume rise; later, balance shifts and the growing uterus can compress the vena cava — so <b>avoid prolonged supine</b> (on-the-back) positions after ~16 weeks. <b>Relaxin</b> increases joint laxity. Pelvic-floor and core work are valuable."},
+     {t:"Key considerations", b:"Avoid contact and fall-risk sports, scuba diving, and <b>overheating</b>; stay hydrated. Modify movements as the bump grows. Use the <b>talk test</b> for intensity rather than pushing to exhaustion."},
+     {t:"Safety & red flags", b:"<b>Stop and seek care</b> for vaginal bleeding, fluid leakage, regular painful contractions, dizziness or faintness, chest pain, calf pain/swelling, or headache. Obstetric complications need clearance first."},
+     {t:"Starting dose & progression", b:"Around <b>150 min/week</b> of moderate aerobic (talk-test intensity), plus strength and pelvic-floor work. Adjust intensity and positions as pregnancy progresses; comfort and symptoms guide progression."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Rough weekly activity target in healthy pregnancy?",
+      options:["30 min/week","~150 min/week moderate","10 hours/week","None — rest"], answer:1, explain:"About 150 min/week of moderate activity is the guide."},
+     {type:"mc", kind:"Check", q:"After ~16 weeks, what should you avoid?",
+      options:["All standing","Prolonged supine (on-the-back) positions","Walking","Pelvic-floor work"], answer:1, explain:"Prolonged supine positions can compress the vena cava — avoid after ~16 weeks."},
+     {type:"mc", kind:"Check", q:"Which is a stop-and-seek-care warning sign?",
+      options:["Mild leg fatigue","Vaginal bleeding or fluid leakage","Feeling warm","Light sweating"], answer:1, explain:"Bleeding, fluid leak, contractions, chest pain, dizziness → stop and seek care."},
+   ]},
+ { id:"lbp", name:"Low Back Pain", icon:"💢", color:"var(--gold)", shadow:"var(--gold-d)",
+   cards:[
+     {t:"What it is", b:"Most low back pain is <b>non-specific</b> — no serious underlying disease — and is <b>safe to move and load</b>. Imaging changes like 'degeneration' are common and usually aren't the pain source. Staying active beats rest, and <b>fear-avoidance</b> is often a bigger problem than the tissue."},
+     {t:"Screen red flags first", b:"Always screen: cauda equina (<b>saddle numbness, bladder/bowel changes, bilateral leg symptoms</b>) → ED; plus cancer history, unexplained weight loss, night pain, fever, or major trauma → refer. With those cleared, loading is safe."},
+     {t:"Hurt ≠ harm", b:"Soreness that settles by the next day doesn't mean damage. <b>Graded exposure</b> to feared movements, general exercise and reassurance rebuild capacity and confidence. The message itself is part of the treatment."},
+     {t:"What happens during exercise", b:"Movement tends to <b>desensitise</b> the back over time. Pick exercises and ranges the client feels safe with first — early wins rebuild trust — then progress."},
+     {t:"Starting dose & progression", b:"Graded walking plus a few tolerated movements (hip hinge, sit-to-stand, carries). Progress <b>range first, then load</b>, guided by the 24-hour response. Keep educating that sore ≠ damaged."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Most non-specific low back pain is:",
+      options:["Dangerous to load","Safe to move and load","A reason for bed rest","Caused by disc 'damage'"], answer:1, explain:"Non-specific LBP is safe to load; staying active beats rest."},
+     {type:"mc", kind:"Check", q:"Saddle numbness + new bladder changes means:",
+      options:["Prescribe core work","Cauda equina → emergency department","Massage","Just rest"], answer:1, explain:"Saddle anaesthesia + bladder/bowel change = cauda equina red flag → ED."},
+     {type:"mc", kind:"Check", q:"The key message for most low back pain is:",
+      options:["Protect and rest it","Hurt ≠ harm — graded loading helps","Avoid all bending forever","Surgery is needed"], answer:1, explain:"Hurt ≠ harm; graded exposure and activity rebuild the back."},
+   ]},
+ { id:"mental", name:"Mental Health", icon:"💙", color:"var(--blue)", shadow:"var(--blue-d)",
+   cards:[
+     {t:"What it is", b:"Exercise is an <b>evidence-based treatment</b> for depression and anxiety — comparable to medication or therapy for mild-to-moderate depression. It improves mood, sleep and self-efficacy. Both aerobic and resistance training help."},
+     {t:"What happens during exercise", b:"The bodily sensations of exertion (raised heart rate, faster breathing, sweating) can <b>mimic anxiety or panic</b>. Explaining this in advance stops clients misreading a normal exercise response as danger. Early successes build self-efficacy."},
+     {t:"Key considerations", b:"Motivation and energy are often low, so <b>reduce barriers</b>: keep it simple, build a routine, add enjoyment and social elements. Watch medications (some cause sedation, weight gain or postural drops)."},
+     {t:"Safety & red flags", b:"Ask about <b>suicidal ideation</b> or acute crisis → refer to appropriate care; exercise is an <b>adjunct</b>, not a replacement for treatment. Screen for compulsive over-exercise (e.g. with eating disorders)."},
+     {t:"Starting dose & progression", b:"Any movement counts. Aim toward <b>150 min/week</b> moderate, but start tiny and consistent — <b>behavioural activation</b> (just scheduling it) is powerful. Adherence matters more than intensity."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"For mild-to-moderate depression, exercise is:",
+      options:["Useless","An evidence-based treatment, comparable to meds/therapy","Only for athletes","Harmful"], answer:1, explain:"Exercise is an evidence-based treatment for mild-moderate depression."},
+     {type:"mc", kind:"Check", q:"Why pre-explain exercise sensations to an anxious client?",
+      options:["To scare them","So raised HR/breathing aren't misread as panic","No reason","To push harder"], answer:1, explain:"Exertion sensations mimic anxiety — explaining prevents misinterpretation."},
+     {type:"mc", kind:"Check", q:"A client discloses suicidal thoughts. You:",
+      options:["Just keep training","Refer to appropriate care — exercise is an adjunct","Ignore it","End all sessions"], answer:1, explain:"Refer for crisis care; exercise supports but doesn't replace treatment."},
+   ]},
+ { id:"dementia", name:"Dementia", icon:"🧩", color:"var(--purple)", shadow:"var(--purple-d)",
+   cards:[
+     {t:"What it is", b:"Progressive cognitive decline (commonly Alzheimer's). Exercise supports function, mood and behaviour, may slow decline, and reduces falls. <b>Routine and familiarity</b> make sessions work."},
+     {t:"What happens during exercise", b:"Clients may not recall instructions, so use <b>simple cues, demonstration and repetition</b>, with a consistent environment and trainer. Apathy or agitation vary day to day — meet them where they are."},
+     {t:"Key considerations", b:"<b>Falls risk is high</b> — supervise. Communicate in short, clear, calm prompts and reduce distractions. Involve carers, and remember cardiovascular comorbidity is common."},
+     {t:"Safety & red flags", b:"Watch for falls and wandering. A <b>sudden change in behaviour or alertness</b> can signal delirium or infection → review. Apply standard cardiac/BP rules."},
+     {t:"Starting dose & progression", b:"Simple, repetitive <b>functional + balance + walking</b> work in a consistent routine. Progress by repetition before complexity. Keep it enjoyable and habitual."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Best communication approach with dementia clients?",
+      options:["Long detailed instructions","Simple cues, demonstration, repetition, routine","Write a manual","Change trainers often"], answer:1, explain:"Simple cues, demonstration and consistent routine work best."},
+     {type:"mc", kind:"Check", q:"Falls risk in dementia means you should:",
+      options:["Train unsupervised","Supervise closely","Avoid all movement","Only use machines"], answer:1, explain:"Falls risk is high — supervise."},
+     {type:"mc", kind:"Check", q:"A sudden change in behaviour/alertness could be:",
+      options:["Normal — ignore","Delirium or infection → review","Just laziness","A reason to push harder"], answer:1, explain:"Acute change may signal delirium/infection → medical review."},
+   ]},
+ { id:"ms", name:"Multiple Sclerosis", icon:"🌀", color:"var(--teal)", shadow:"var(--teal-d)",
+   cards:[
+     {t:"What it is", b:"An autoimmune demyelination of the central nervous system causing variable symptoms — fatigue, weakness, spasticity, balance and sensory changes, and heat sensitivity. Exercise improves function, fatigue and quality of life; it's <b>no longer contraindicated</b>."},
+     {t:"What happens during exercise", b:"<b>Heat sensitivity (Uhthoff's phenomenon)</b> means overheating can transiently worsen symptoms — keep cool (cooling aids, morning sessions, hydration). Fatigue is a major factor, and weakness/balance issues raise falls risk."},
+     {t:"Key considerations", b:"<b>Fatigue management</b> is central — dose to energy and rest as needed. Account for spasticity and bladder issues. During a <b>relapse</b>, back off and rebuild afterward."},
+     {t:"Safety & red flags", b:"A relapse (new or worsening neuro symptoms over days) → liaise with the team and reduce load. Watch falls. If overheating worsens symptoms, cool down."},
+     {t:"Starting dose & progression", b:"Aerobic + resistance + balance at <b>moderate</b> intensity in a <b>cool</b> environment; autoregulate to fatigue. Progress gradually, expecting fluctuation around relapses."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Why keep MS clients cool during exercise?",
+      options:["Comfort only","Heat sensitivity (Uhthoff's) can worsen symptoms","No reason","To save energy bills"], answer:1, explain:"Overheating transiently worsens MS symptoms — keep cool."},
+     {type:"mc", kind:"Check", q:"Is exercise safe and beneficial in MS?",
+      options:["No, it's contraindicated","Yes — improves fatigue, function and QoL","Only in remission","Only stretching"], answer:1, explain:"Exercise is beneficial in MS and no longer contraindicated."},
+     {type:"mc", kind:"Check", q:"During an MS relapse you should:",
+      options:["Push through hard","Back off and liaise with the team","Stop exercise forever","Add high intensity"], answer:1, explain:"Reduce load during a relapse and rebuild afterward."},
+   ]},
+ { id:"fibro", name:"Fibromyalgia", icon:"💠", color:"var(--green)", shadow:"var(--green-d)",
+   cards:[
+     {t:"What it is", b:"Chronic widespread pain with fatigue, poor sleep and cognitive issues — a disorder of <b>central pain processing (sensitisation)</b>, not joint or muscle damage. Exercise (especially aerobic plus gradual strength) is a core treatment."},
+     {t:"What happens during exercise", b:"Clients are prone to <b>post-exertional flares</b> if pushed too hard too soon. <b>Start low, go slow.</b> Pain ≠ damage — gentle, graded, consistent activity desensitises the system over time."},
+     {t:"Key considerations", b:"<b>Pacing</b> is everything — avoid boom-bust cycles. Manage expectations toward gradual gains. Address sleep, stress and beliefs. <b>Warm-water</b> exercise is often well tolerated."},
+     {t:"Safety & red flags", b:"Usually safe; screen for other pathology if the picture is atypical. A big flare means the dose was too high → <b>regress, don't stop</b>."},
+     {t:"Starting dose & progression", b:"Very gentle aerobic (even 5–10 min), gradual strength, consistency over intensity. Progress in <b>tiny increments</b> guided by the flare response. Hydrotherapy can help."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"The guiding principle for exercise in fibromyalgia is:",
+      options:["No pain, no gain","Start low, go slow — pace, avoid boom-bust","Max effort daily","Complete rest"], answer:1, explain:"Pacing and gradual progression avoid post-exertional flares."},
+     {type:"mc", kind:"Check", q:"Fibromyalgia pain reflects:",
+      options:["Joint destruction","Central sensitisation — pain ≠ damage","Broken bones","Infection"], answer:1, explain:"It's a central pain-processing disorder; hurt ≠ harm."},
+     {type:"mc", kind:"Check", q:"After a big flare you should:",
+      options:["Stop exercising for good","Regress the dose and rebuild","Push through it","Double the intensity"], answer:1, explain:"A flare means too much too soon — regress, don't stop."},
+   ]},
+ { id:"longcovid", name:"Long COVID", icon:"🦠", color:"var(--red)", shadow:"var(--red-d)",
+   cards:[
+     {t:"What it is", b:"Persistent symptoms after COVID — fatigue, breathlessness, brain fog, palpitations. A subset have <b>post-exertional symptom exacerbation (PESE/PEM)</b>: overexertion triggers a delayed crash. Your approach hinges on screening for this."},
+     {t:"What happens during exercise", b:"<b>Screen for post-exertional malaise first.</b> If PESE is present, do NOT use graded exercise that provokes crashes — use <b>pacing</b> and symptom-titrated activity within the energy envelope. If no PESE, a cautious graded return is fine."},
+     {t:"Key considerations", b:"Watch for <b>resting tachycardia</b> or POTS-type responses, exertional desaturation, and chest symptoms — flag cardiac/respiratory issues. Heart-rate monitoring can help cap effort."},
+     {t:"Safety & red flags", b:"Chest pain, syncope, exertional desaturation or marked palpitations → medical review before progressing. Post-exertional crashes mean pull back and pace."},
+     {t:"Starting dose & progression", b:"With PESE: pace within the energy envelope, no push-through. Without PESE: start very low, progress slowly, and watch the <b>next-day response</b> closely."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"The first thing to screen for in Long COVID is:",
+      options:["1RM strength","Post-exertional malaise (PESE/PEM)","Flexibility","Body fat"], answer:1, explain:"Screen for post-exertional symptom exacerbation before any graded exercise."},
+     {type:"mc", kind:"Check", q:"If post-exertional malaise is present, you should:",
+      options:["Push through with graded exercise","Pace within the energy envelope — no push-through","Do HIIT","Ignore symptoms"], answer:1, explain:"With PESE, avoid provoking crashes — pace, don't push."},
+     {type:"mc", kind:"Check", q:"Which warrants medical review before progressing?",
+      options:["Mild tiredness","Chest pain or exertional desaturation","A good session","Slight sweat"], answer:1, explain:"Chest pain, syncope, desaturation, marked palpitations → review."},
+   ]},
+ { id:"obesity", name:"Obesity / Metabolic", icon:"⚖️", color:"var(--gold)", shadow:"var(--gold-d)",
+   cards:[
+     {t:"What it is", b:"Excess adiposity raises the risk of type 2 diabetes, cardiovascular disease, osteoarthritis and sleep apnoea. Importantly, exercise improves metabolic health and fitness <b>even without big weight loss</b> — fitness matters independently of weight."},
+     {t:"What happens during exercise", b:"Expect higher <b>joint loads</b> and heat intolerance, and often deconditioning with hidden cardiovascular risk. <b>Low-impact</b> modes (walking, bike, water) protect joints. Fitness and metabolic gains arrive before the scale moves."},
+     {t:"Key considerations", b:"Focus on behaviour, volume and enjoyment rather than just calories. Screen cardiovascular risk. A <b>weight-neutral</b> framing supports adherence. Build volume before intensity."},
+     {t:"Safety & red flags", b:"Watch for silent cardiac risk (chest pain, undue breathlessness), joint pain with high-impact work, and sleep-apnoea symptoms. Start low-impact."},
+     {t:"Starting dose & progression", b:"Start with low-impact aerobic, build <b>duration and volume first</b>, and add strength to protect muscle. Progress volume before intensity. Adherence is the real outcome."},
+   ],
+   qs:[
+     {type:"mc", kind:"Check", q:"Exercise benefits in obesity:",
+      options:["Only count if weight drops","Improve health & fitness even without big weight loss","Are minimal","Require high impact"], answer:1, explain:"Fitness and metabolic benefits occur independent of weight loss."},
+     {type:"mc", kind:"Check", q:"Why favour low-impact modes early?",
+      options:["They're easier to bill","Protect joints and manage heat intolerance","They burn more fat","No reason"], answer:1, explain:"Low-impact protects joints and suits heat intolerance and deconditioning."},
+     {type:"mc", kind:"Check", q:"The progression priority is:",
+      options:["Intensity first","Build volume/duration before intensity","Max effort immediately","Only strength"], answer:1, explain:"Build volume first, then intensity; adherence is the real outcome."},
+   ]},
+];
+
+/* Key-numbers cheat card appended to the end of every condition course (by id) */
+const KEYNUM = {
+ htn:["No exercise if resting BP <b>&gt;180/110</b>","160–179 systolic → <b>light only</b>, monitor, refer","Aerobic lowers resting BP <b>~5–7 mmHg</b>","Strength: lighter load, <b>12–15 reps</b>, no breath-holding"],
+ t2dm:["Hypo = BGL <b>&lt;4.0</b> → stop, <b>15 g</b> carbs, retest in <b>15 min</b>","Carbs first if pre-exercise BGL <b>&lt;5.0</b>","Defer if BGL <b>&gt;15</b> with symptoms/ketones","Glucose benefit lasts <b>24–48 h</b>; post-meal walk <b>10–15 min</b>"],
+ cvd:["Chest pain unresolved in minutes or unrelieved by GTN → <b>000</b>","Beta-blocker → use <b>RPE</b>, not HR","Start light–moderate, <b>RPE 3–4/10</b>","Always warm up &amp; cool down — no abrupt stops"],
+ hf:["Decompensation: <b>≥2 kg in ~3 days</b> or new oedema/orthopnoea → review","Intensity <b>moderate</b>, symptom-guided (RPE 3–4/10)","Build duration before intensity"],
+ copd:["Stop if SpO₂ <b>&lt;88–90%</b>","Keep dyspnoea around <b>3–4/10</b>","Intervals <b>1–2 min on / 1–2 min rest</b>","Keep the reliever inhaler on hand"],
+ oa:["Pain <b>≤4–5/10</b> during and settling by next day","Strength <b>2×/week</b>","Bike/pool if walking flares","Hot, swollen, red joint → refer"],
+ osteo:["Diagnosis: T-score <b>≤ −2.5</b>","<b>Avoid</b> loaded spinal flexion/rotation","Resistance <b>2×/week</b> + balance <b>daily</b>","Sudden new back pain → refer"],
+ stroke:["New neuro signs → <b>FAST → 000</b>","Apply BP/cardiac rules","Short, frequent, <b>task-specific</b> bouts","Rise slowly — orthostatic risk"],
+ parkinsons:["Train in the <b>ON window</b> (~1 h post-dose)","<b>Rise slowly</b> — orthostatic hypotension","Big-amplitude + cueing + balance work"],
+ cancer:["Neutropenic day → avoid high intensity &amp; crowds; <b>fever → review</b>","Bone metastases → <b>no high-impact</b> at those sites","Bouts <b>5–10 min</b>, scaled to the day","Maintenance through treatment is a win"],
+ asthma:["Reliever (SABA) <b>~15 min pre-exercise</b> prevents EIB","EIB usually hits <b>5–15 min</b> in","<b>10–15 min warm-up</b> reduces EIB","Severe attack (can't speak, reliever failing) → <b>000</b>"],
+ ckd:["<b>No BP cuff or heavy load</b> on the fistula/access arm","Moderate intensity, <b>RPE 3–4/10</b>","<b>High CV risk</b> — watch cardiac symptoms","Dialysis: often better on non-dialysis days / first half"],
+ pad:["Walk to <b>moderate claudication pain (~3/5)</b>, rest, repeat","Aim <b>30+ min</b>, most days — improves walking distance","<b>Rest pain</b> or non-healing wound → urgent vascular review","Foot care — wounds heal slowly"],
+ pregnancy:["Aim <b>~150 min/week</b> moderate (talk test)","<b>Avoid supine</b> positions after ~<b>16 weeks</b>","Stop for bleeding, fluid leak, contractions, chest pain","Avoid overheating, contact/fall sports, scuba"],
+ lbp:["Cauda equina (saddle numbness, bladder/bowel) → <b>ED</b>","Also refer: cancer history, weight loss, night pain, fever, trauma","Otherwise <b>safe to load</b> — hurt ≠ harm","Progress on the <b>24-hour response</b>"],
+ mental:["Aerobic &amp; resistance both lift mood","Start tiny &amp; consistent; aim toward <b>150 min/week</b>","Exercise sensations (↑HR, breathing) ≠ panic — educate","Suicidal ideation / crisis → refer; exercise is an adjunct"],
+ dementia:["Simple cues, <b>demonstration</b>, repetition, consistent routine","<b>Supervise</b> — high falls risk","Sudden behaviour/alertness change → ?delirium/infection → review","Functional + balance + walking"],
+ ms:["<b>Heat sensitivity</b> (Uhthoff's) — keep cool, hydrate, AM sessions","<b>Autoregulate</b> to fatigue","Relapse (new neuro symptoms over days) → back off &amp; liaise","Aerobic + resistance + balance"],
+ fibro:["<b>Start low, go slow</b> — avoid boom-bust","Pain ≠ damage (central sensitisation)","<b>Pacing</b> is the key skill","Warm-water exercise often well tolerated"],
+ longcovid:["<b>Screen for post-exertional malaise (PESE)</b> first","If PESE → <b>pace</b> within the energy envelope, don't push through","Watch resting tachycardia, exertional desaturation, chest symptoms","Crash days later → pull back"],
+ obesity:["Fitness benefits are <b>independent of weight loss</b>","<b>Low-impact</b> first — protect joints, manage heat","Build <b>volume before intensity</b>","Screen hidden cardiovascular risk"],
+};
+
+/* ============================================================
+   State / persistence
+   ============================================================ */
+const SKEY='ep-quest-v1';
+let S = load();
+function load(){
+  try{ return JSON.parse(localStorage.getItem(SKEY)) || fresh(); }catch(e){ return fresh(); }
+}
+function fresh(){ return { xp:0, streak:0, maxStreak:0, lastDay:null, done:{}, crowns:{}, flawless:0, dayXp:0, dayXpDate:null, answered:0, correctCount:0, missed:{} }; } // done["u-l"]=true, crowns key=count
+function save(){ localStorage.setItem(SKEY, JSON.stringify(S)); }
+
+function lvl(){ return Math.floor(S.xp/60)+1; }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function yesterdayStr(){ const d=new Date(Date.now()-864e5); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+
+function refreshHud(){
+  hudStreak.textContent=S.streak;
+  hudXp.textContent=S.xp;
+  hudLvl.textContent='Level '+lvl();
+}
+
+/* ============================================================
+   Home / path render
+   ============================================================ */
+const home=document.getElementById('home');
+function unlocked(u,l){
+  if(u===0&&l===0) return true;
+  // unlocked if previous lesson done
+  let flat=[]; UNITS.forEach((U,ui)=>U.lessons.forEach((L,li)=>flat.push(ui+'-'+li)));
+  const key=u+'-'+l; const idx=flat.indexOf(key);
+  if(idx<=0) return true;
+  return !!S.done[flat[idx-1]];
+}
+function renderHome(){
+  refreshHud();
+  home.innerHTML='';
+  UNITS.forEach((U,ui)=>{
+    const head=document.createElement('div');
+    head.className='unit-head';
+    head.style.background=U.color; head.style.boxShadow='0 4px 0 '+U.shadow;
+    head.innerHTML=`<h2>${U.icon} ${U.title}</h2><p>${U.sub}</p>`;
+    home.appendChild(head);
+    const path=document.createElement('div'); path.className='path';
+    U.lessons.forEach((L,li)=>{
+      const key=ui+'-'+li;
+      const isDone=!!S.done[key];
+      const open=unlocked(ui,li);
+      const crowns=S.crowns[key]||0;
+      const node=document.createElement('button');
+      node.className='node'+(open?'':' locked');
+      node.style.setProperty('--nd', open? U.shadow : 'var(--line2)');
+      const showStart = open && !isDone;
+      node.innerHTML=`
+        ${crowns>0?`<div class="crown">${'👑'.repeat(Math.min(crowns,1))}</div>`:''}
+        ${showStart?`<div class="start-pop">START</div>`:''}
+        <div class="disc" style="${open?`background:${isDone?U.color:'var(--card)'};color:${isDone?'#fff':U.color};border:${isDone?'none':'3px solid '+U.color}`:''}">
+          ${open? (isDone?'✓':L.icon) : '🔒'}
+        </div>`;
+      if(open) node.onclick=()=>startLesson(ui,li);
+      path.appendChild(node);
+    });
+    home.appendChild(path);
+  });
+}
+
+/* ============================================================
+   Lesson player
+   ============================================================ */
+let cur=null; // {ui,li,qs,i,hearts,wrong,total,locked,answered}
+const player=document.getElementById('player');
+const qarea=document.getElementById('qarea');
+const foot=document.getElementById('foot');
+let checkBtn=document.getElementById('checkBtn');
+const barFill=document.getElementById('barFill');
+const liveHearts=document.getElementById('liveHearts');
+
+function startLesson(ui,li){
+  beginLesson(UNITS[ui].lessons[li].qs.slice(), ui+'-'+li, 'quest');
+}
+function startCourse(ci){
+  const c=LEARN[ci], steps=[];
+  c.cards.forEach(card=>steps.push({type:'info', kind:c.name, title:card.t, body:card.b}));
+  if(KEYNUM[c.id]) steps.push({type:'info', kind:c.name, accent:'key', title:'📊 Key numbers',
+    body:'<ul class="keys">'+KEYNUM[c.id].map(k=>'<li>'+k+'</li>').join('')+'</ul>'});
+  c.qs.forEach(q=>steps.push(q));
+  beginLesson(steps, 'L'+ci, 'learn');
+}
+function beginLesson(steps, doneKey, mode){
+  cur={steps, doneKey, mode, i:0, hearts:5, wrong:0, total:steps.length,
+       scoredTotal:steps.filter(s=>s.type!=='info').length||1,
+       sel:null, matchState:null, answered:false};
+  player.classList.add('show');
+  renderQ();
+}
+function advance(){
+  cur.i++;
+  if(cur.i>=cur.total) completeLesson(); else renderQ();
+}
+function quitLesson(){ if(confirm('Quit this lesson? Progress in it will be lost.')){ player.classList.remove('show'); } }
+
+function renderQ(){
+  cur.answered=false; cur.sel=null; cur.matchState=null;
+  liveHearts.textContent=cur.hearts;
+  barFill.style.width=((cur.i)/cur.total*100)+'%';
+  const q=cur.steps[cur.i];
+  // Teaching card (Learn mode): no scoring, no hearts — just read and continue
+  if(q.type==='info'){
+    const hs=q.accent==='key'?' style="background:var(--gold);color:#3a2e00"':'';
+    qarea.innerHTML=`<div class="qkind">${q.kind||'Learn'}</div>`+
+      `<div class="teach"><div class="teach-h"${hs}>${q.title}</div><div class="teach-b">${q.body}</div></div>`;
+    qarea.scrollTop=0;
+    foot.className='foot';
+    foot.innerHTML='<button class="btn green" id="infoNext">Continue</button>';
+    document.getElementById('infoNext').onclick=advance;
+    return;
+  }
+  // rebuild the footer fresh — feedback replaces its innerHTML, so the old Check button is stale
+  foot.className='foot';
+  foot.innerHTML='<button class="btn gray" id="checkBtn" disabled>Check</button>';
+  checkBtn=document.getElementById('checkBtn');
+  checkBtn.disabled=true; checkBtn.onclick=onCheck;
+  let html=`<div class="qkind">${q.kind||'Question'}</div>`;
+  if(q.scn) html+=`<div class="qscn">${q.scn}</div>`;
+  html+=`<div class="qtext">${q.q}</div>`;
+  if(q.type==='mc'||q.type==='multi'){
+    html+=`<div class="opts" id="opts">`;
+    q.options.forEach((o,idx)=>{
+      const k=String.fromCharCode(65+idx);
+      html+=`<button class="opt" data-i="${idx}" onclick="pick(${idx})"><span class="key">${k}</span><span>${o}</span></button>`;
+    });
+    html+=`</div>`;
+  } else if(q.type==='match'){
+    // build shuffled right column
+    const left=q.pairs.map((p,i)=>({t:p[0],i}));
+    const right=q.pairs.map((p,i)=>({t:p[1],i})).sort(()=>Math.random()-.5);
+    cur.matchState={left,right,sel:null,selSide:null,matched:{},rightOrder:right};
+    html+=`<div class="match"><div class="col" id="mL"></div><div class="col" id="mR"></div></div>`;
+    setTimeout(()=>{
+      const L=document.getElementById('mL'), R=document.getElementById('mR');
+      left.forEach(o=>{const b=document.createElement('button');b.className='mitem';b.textContent=o.t;b.dataset.i=o.i;b.dataset.side='L';b.onclick=()=>mpick('L',o.i,b);L.appendChild(b);});
+      right.forEach(o=>{const b=document.createElement('button');b.className='mitem';b.textContent=o.t;b.dataset.i=o.i;b.dataset.side='R';b.onclick=()=>mpick('R',o.i,b);R.appendChild(b);});
+    },0);
+  }
+  qarea.innerHTML=html;
+  qarea.scrollTop=0;
+}
+
+function pick(idx){
+  if(cur.answered) return;
+  const q=cur.steps[cur.i];
+  const opts=document.querySelectorAll('#opts .opt');
+  if(q.type==='mc'){
+    cur.sel=idx;
+    opts.forEach(o=>o.classList.toggle('sel', +o.dataset.i===idx));
+  } else { // multi
+    if(!Array.isArray(cur.sel)) cur.sel=[];
+    const at=cur.sel.indexOf(idx);
+    if(at>=0) cur.sel.splice(at,1); else cur.sel.push(idx);
+    opts.forEach(o=>o.classList.toggle('sel', cur.sel.includes(+o.dataset.i)));
+  }
+  const has = q.type==='mc' ? cur.sel!=null : (cur.sel&&cur.sel.length>0);
+  enableCheck(has);
+}
+
+function mpick(side,i,btn){
+  const ms=cur.matchState;
+  if(ms.matched[side+i]) return;
+  // toggle selection within constraints
+  if(ms.sel==null){ ms.sel=i; ms.selSide=side; btn.classList.add('sel'); return; }
+  if(ms.selSide===side){ // change selection same side
+    document.querySelectorAll('#m'+side+' .mitem').forEach(b=>b.classList.remove('sel'));
+    ms.sel=i; btn.classList.add('sel'); return;
+  }
+  // we have one from each side → check pair correctness for instant lock (Duolingo-style)
+  const leftI = side==='L'? i : ms.sel;
+  const rightI = side==='R'? i : ms.sel;
+  if(leftI===rightI){
+    // correct match
+    ms.matched['L'+leftI]=true; ms.matched['R'+rightI]=true;
+    document.querySelectorAll('.match .mitem').forEach(b=>{
+      if(b.dataset.side==='L'&&+b.dataset.i===leftI) b.classList.add('done');
+      if(b.dataset.side==='R'&&+b.dataset.i===rightI) b.classList.add('done');
+      b.classList.remove('sel');
+    });
+    ding();
+    ms.sel=null; ms.selSide=null;
+    // all matched?
+    if(Object.keys(ms.matched).length === cur.steps[cur.i].pairs.length*2){
+      cur.sel='matched'; enableCheck(true);
+    }
+  } else {
+    // wrong pair: flash and reset selection, no heart lost (forgiving matching)
+    const wrongBtns=[...document.querySelectorAll('.match .mitem')].filter(b=>b.classList.contains('sel')||b===btn);
+    btn.classList.add('sel');
+    setTimeout(()=>{ document.querySelectorAll('.match .mitem.sel').forEach(b=>b.classList.remove('sel')); },350);
+    ms.sel=null; ms.selSide=null;
+  }
+}
+
+function enableCheck(on){
+  if(on){ checkBtn.className='btn green'; checkBtn.disabled=false; }
+  else { checkBtn.className='btn gray'; checkBtn.disabled=true; }
+}
+
+function onCheck(){
+  if(cur.answered) return;       // block double-check
+  const q=cur.steps[cur.i];
+  let correct=false;
+  if(q.type==='mc'){
+    correct = cur.sel===q.answer;
+    document.querySelectorAll('#opts .opt').forEach(o=>{
+      const i=+o.dataset.i;
+      if(i===q.answer) o.classList.add('correct');
+      else if(i===cur.sel) o.classList.add('wrong');
+      else o.classList.add('dim');
+      o.onclick=null;
+    });
+  } else if(q.type==='multi'){
+    const sel=[...(cur.sel||[])].sort().join(',');
+    const ans=[...q.answers].sort().join(',');
+    correct = sel===ans;
+    document.querySelectorAll('#opts .opt').forEach(o=>{
+      const i=+o.dataset.i;
+      if(q.answers.includes(i)) o.classList.add('correct');
+      else if((cur.sel||[]).includes(i)) o.classList.add('wrong');
+      else o.classList.add('dim');
+      o.onclick=null;
+    });
+  } else if(q.type==='match'){
+    correct=true; // matching only completes when all correct
+  }
+  // track stats + missed questions (spaced-repetition lite)
+  if(q.type==='mc'||q.type==='multi'){
+    S.answered=(S.answered||0)+1;
+    const id=q.q;
+    if(correct){ S.correctCount=(S.correctCount||0)+1; if(S.missed&&S.missed[id]) delete S.missed[id]; }
+    else { S.missed=S.missed||{}; S.missed[id]=true; }
+    save();
+  }
+  cur.answered=true;
+  showFeedback(correct, q.explain);
+}
+
+function showFeedback(correct, explain){
+  if(correct){ ding(); }
+  else { cur.wrong++; cur.hearts--; liveHearts.textContent=cur.hearts; buzz(); }
+  foot.className='foot '+(correct?'ok':'bad');
+  foot.innerHTML=`
+    <div class="fb">
+      <div class="badge">${correct?'✓':'✕'}</div>
+      <div class="txt"><b>${correct?pickPraise():'Not quite'}</b><span>${explain||''}</span></div>
+    </div>
+    <button class="btn ${correct?'green':'red'}" id="contBtn">Continue</button>`;
+  const cb=document.getElementById('contBtn');
+  cb.onclick=()=>{
+    cb.onclick=null;             // one-shot: can't spam Continue to skip ahead
+    if(cur.hearts<=0){ failLesson(); return; }
+    advance();
+  };
+}
+const PRAISE=["Nice!","Correct!","You got it!","Sharp!","Exactly 👏","Clinical!"];
+function pickPraise(){ return PRAISE[Math.random()*PRAISE.length|0]; }
+
+function failLesson(){
+  player.classList.remove('show');
+  toast("💔 Out of hearts — give it another go!");
+}
+
+function completeLesson(){
+  barFill.style.width='100%';
+  const key=cur.doneKey;
+  const firstTime=!S.done[key];
+  if(key!=='practice'){ S.done[key]=true; S.crowns[key]=(S.crowns[key]||0)+1; }
+  // XP — accuracy is over scored questions only (teaching cards don't count)
+  const acc=Math.round((cur.scoredTotal-cur.wrong)/cur.scoredTotal*100);
+  let gained = firstTime?15:6;
+  if(cur.wrong===0){ gained+=5; S.flawless=(S.flawless||0)+1; }
+  S.xp+=gained;
+  // daily XP goal + streak
+  const t=todayStr();
+  if(S.dayXpDate!==t){ S.dayXp=0; S.dayXpDate=t; }
+  S.dayXp=(S.dayXp||0)+gained;
+  if(S.lastDay!==t){
+    if(S.lastDay===yesterdayStr()) S.streak++;
+    else S.streak=1;
+    S.lastDay=t;
+  }
+  S.maxStreak=Math.max(S.maxStreak||0,S.streak);
+  save();
+  // show done screen
+  player.classList.remove('show');
+  document.getElementById('rwStreak').textContent=S.streak;
+  document.getElementById('rwXp').textContent=S.xp;
+  document.getElementById('rwAcc').textContent=acc+'%';
+  document.getElementById('doneSub').textContent = cur.wrong===0 ? "Flawless — that's the reflex firing." : "Solid rep. Onward.";
+  document.getElementById('done').classList.add('show');
+  fanfare();
+  confettiBurst();
+}
+function closeDone(){
+  document.getElementById('done').classList.remove('show');
+  if(cur && cur.mode==='learn') renderLearn();
+  else if(cur && cur.mode==='you') renderProfile();
+  else renderHome();
+  window.scrollTo({top:0});
+}
+
+/* ---- fx ---- */
+let actx=null;
+function audioReady(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }catch(e){} }
+// AudioContext starts suspended under autoplay policy — resume on the first gesture
+document.addEventListener('pointerdown',audioReady);
+document.addEventListener('keydown',audioReady);
+function tone(freq,type,dur,when,vol){ if(!actx) return; when=when||0; vol=vol||.18;
+  const t0=actx.currentTime+when, o=actx.createOscillator(), g=actx.createGain();
+  o.type=type; o.frequency.value=freq; o.connect(g); g.connect(actx.destination);
+  g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+dur); o.start(t0); o.stop(t0+dur+.03); }
+function ding(){ audioReady(); tone(659,'sine',.13,0,.16); tone(880,'sine',.14,.07,.16); tone(1319,'sine',.20,.15,.13); }
+function buzz(){ audioReady(); tone(200,'square',.18,0,.14); tone(150,'square',.22,.09,.12); }
+function fanfare(){ audioReady(); [523,659,784,1047].forEach((f,i)=>tone(f,'triangle',.28,i*.12,.16)); }
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+function confettiBurst(){
+  const colors=['#58cc02','#1cb0f6','#ffc800','#ce82ff','#ff4b4b','#00cd9c'];
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div'); c.className='confetti';
+    c.style.left=Math.random()*100+'%';
+    c.style.background=colors[i%colors.length];
+    c.style.transform=`rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(c);
+    const dx=(Math.random()-.5)*240, dur=1400+Math.random()*1200, rot=Math.random()*720;
+    c.animate([{transform:`translate(0,0) rotate(0deg)`,opacity:1},
+               {transform:`translate(${dx}px,${window.innerHeight+60}px) rotate(${rot}deg)`,opacity:1}],
+              {duration:dur,easing:'cubic-bezier(.2,.6,.5,1)'});
+    setTimeout(()=>c.remove(),dur);
+  }
+}
+
+/* keyboard: 1-9 select, Enter check/continue */
+document.addEventListener('keydown',e=>{
+  if(!player.classList.contains('show')) return;
+  if(/[1-9]/.test(e.key)){ const i=+e.key-1; const opts=document.querySelectorAll('#opts .opt'); if(opts[i]) opts[i].click(); }
+  if(e.key==='Enter'){ const cb=document.getElementById('contBtn')||document.getElementById('infoNext'); if(cb) cb.click(); else if(checkBtn&&!checkBtn.disabled) checkBtn.click(); }
+});
+
+function showTab(t){
+  const map={quest:'home',learn:'learn',you:'you'};
+  ['home','learn','you'].forEach(id=>document.getElementById(id).style.display=(id===map[t])?'':'none');
+  document.getElementById('navQuest').classList.toggle('on',t==='quest');
+  document.getElementById('navLearn').classList.toggle('on',t==='learn');
+  document.getElementById('navYou').classList.toggle('on',t==='you');
+  if(t==='quest') renderHome(); else if(t==='learn') renderLearn(); else renderProfile();
+  window.scrollTo({top:0});
+}
+function renderLearn(){
+  refreshHud();
+  const host=document.getElementById('learn');
+  host.innerHTML='<div class="learn-intro">📚 Condition Library<span>Short lessons on each condition — what it is, how it changes the exercise response, the meds that matter, the red flags, and how to start &amp; progress. Read the cards, then a quick check.</span></div>';
+  const grid=document.createElement('div'); grid.className='cgrid';
+  LEARN.forEach((c,i)=>{
+    const done=!!S.done['L'+i];
+    const b=document.createElement('button'); b.className='ctile';
+    b.style.setProperty('--cc',c.color); b.style.setProperty('--cs',c.shadow);
+    b.innerHTML=`<div class="cic">${c.icon}</div><div class="cname">${c.name}</div><div class="cmeta">${c.cards.length} cards · ${c.qs.length} Q${done?' · ✓':''}</div>`;
+    b.onclick=()=>startCourse(i);
+    grid.appendChild(b);
+  });
+  host.appendChild(grid);
+}
+/* ---- Profile / achievements / practice ---- */
+function doneCount(){ return Object.keys(S.done).filter(k=>S.done[k]&&k!=='practice').length; }
+function learnCount(){ return LEARN.filter((c,i)=>S.done['L'+i]).length; }
+function unitDone(ui){ return UNITS[ui].lessons.every((l,li)=>S.done[ui+'-'+li]); }
+function questDoneCount(){ return UNITS.reduce((a,u,ui)=>a+u.lessons.filter((l,li)=>S.done[ui+'-'+li]).length,0); }
+function questTotalCount(){ return UNITS.reduce((a,u)=>a+u.lessons.length,0); }
+const ACH=[
+ {ic:'🎯',n:'First Steps',d:'Finish your first lesson',t:()=>doneCount()>=1},
+ {ic:'✨',n:'Flawless',d:'Finish a lesson with no mistakes',t:()=>(S.flawless||0)>=1},
+ {ic:'🔥',n:'Warming Up',d:'Reach a 3-day streak',t:()=>(S.maxStreak||0)>=3},
+ {ic:'🗓️',n:'Week Warrior',d:'Reach a 7-day streak',t:()=>(S.maxStreak||0)>=7},
+ {ic:'💎',n:'Century',d:'Earn 100 XP',t:()=>S.xp>=100},
+ {ic:'👑',n:'High Roller',d:'Earn 500 XP',t:()=>S.xp>=500},
+ {ic:'🚨',n:'Safety First',d:'Clear the Red Flags unit',t:()=>unitDone(1)},
+ {ic:'📚',n:'Scholar',d:'Complete 5 conditions',t:()=>learnCount()>=5},
+ {ic:'🎓',n:'Professor',d:'Complete every condition',t:()=>learnCount()>=LEARN.length},
+ {ic:'🏆',n:'Grandmaster',d:'Finish every Quest lesson',t:()=>questDoneCount()>=questTotalCount()},
+ {ic:'🧠',n:'Brainiac',d:'Answer 100 questions',t:()=>(S.answered||0)>=100},
+ {ic:'💯',n:'Sharpshooter',d:'Answer 50 correctly',t:()=>(S.correctCount||0)>=50},
+];
+function renderProfile(){
+  refreshHud();
+  const host=document.getElementById('you');
+  const need=60, into=S.xp%60, lvlNow=lvl();
+  const goal=30, today=(S.dayXpDate===todayStr())?(S.dayXp||0):0;
+  const earned=ACH.filter(a=>a.t()).length;
+  const missedN=Object.keys(S.missed||{}).length;
+  let html=`
+    <div class="prof-top">
+      <div class="prof-lvl">${lvlNow}</div>
+      <div class="prof-meta"><b>Level ${lvlNow}</b>
+        <div class="xpbar"><div class="xpfill" style="width:${into/need*100}%"></div></div>
+        <span>${into} / ${need} XP to level ${lvlNow+1}</span></div>
+    </div>
+    <div class="goal">🎯 Daily goal <b>${Math.min(today,goal)}/${goal} XP</b>
+      <div class="goalbar"><div class="goalfill" style="width:${Math.min(today/goal*100,100)}%"></div></div></div>
+    <div class="statrow">
+      <div class="stat2"><b>🔥 ${S.streak}</b><span>Streak</span></div>
+      <div class="stat2"><b>💎 ${S.xp}</b><span>Total XP</span></div>
+      <div class="stat2"><b>📘 ${questDoneCount()}/${questTotalCount()}</b><span>Quest</span></div>
+      <div class="stat2"><b>📚 ${learnCount()}/${LEARN.length}</b><span>Conditions</span></div>
+    </div>
+    <button class="btn blue" style="margin:6px 16px 4px;width:calc(100% - 32px)" onclick="startPractice()">⚡ Quick Practice — 7 mixed questions</button>
+    ${missedN?`<button class="btn red" style="margin:0 16px 4px;width:calc(100% - 32px)" onclick="startReview()">🔁 Review your misses (${missedN})</button>`:''}
+    <div class="ach-h">🏅 Achievements <span>${earned}/${ACH.length}</span></div>
+    <div class="achgrid">`;
+  ACH.forEach(a=>{ const got=a.t(); html+=`<div class="ach ${got?'got':''}"><div class="ach-ic">${got?a.ic:'🔒'}</div><div class="ach-n">${a.n}</div><div class="ach-d">${a.d}</div></div>`; });
+  html+=`</div>`;
+  host.innerHTML=html;
+}
+function allScored(){
+  let pool=[];
+  UNITS.forEach(u=>u.lessons.forEach(l=>l.qs.forEach(q=>{ if(q.type!=='info') pool.push(q); })));
+  LEARN.forEach(c=>c.qs.forEach(q=>pool.push(q)));
+  return pool;
+}
+function startPractice(){
+  const pool=allScored().sort(()=>Math.random()-.5).slice(0,7);
+  beginLesson(pool, 'practice', 'you');
+}
+function startReview(){
+  const ids=S.missed||{};
+  let pool=allScored().filter(q=>ids[q.q]);
+  if(!pool.length){ toast('No misses to review — nice!'); return; }
+  pool=pool.sort(()=>Math.random()-.5).slice(0,10);
+  beginLesson(pool, 'practice', 'you');
+}
+showTab('quest');
+
+// Register service worker for offline use (only when served over http/https; harmless on file://)
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
