@@ -880,6 +880,63 @@ const UNITS = [
    ]},
   ]
  },
+ {
+  title:"Unit 12 · Screening & Assessment 📏", sub:"Screen, stratify, measure", color:"var(--blue)", shadow:"var(--blue-d)", icon:"📏",
+  lessons:[
+   { title:"Pre-exercise screening", icon:"📋", qs:[
+     {type:"info", kind:"Assessment", title:"Screen before you prescribe", body:"Before prescribing exercise, screen for risk. The standard Australian tool is the <b>Adult Pre-Exercise Screening System (APSS)</b> — its first stage flags known disease, and signs/symptoms, to decide who needs <b>medical clearance</b> before moderate-to-vigorous exercise. The aim is to identify who needs review first — <b>not</b> to exclude people from exercising."},
+     {type:"mc", kind:"Assessment", q:"The standard Australian pre-exercise screening tool is the:",
+      options:["PAR-Q only","Adult Pre-Exercise Screening System (APSS)","BMI chart","A blood test"], answer:1, explain:"The APSS (ESSA/SMA/Fitness Australia) is the standard screening tool."},
+     {type:"mc", kind:"Assessment", q:"The purpose of pre-exercise screening is to:",
+      options:["Exclude people from exercise","Identify who needs medical clearance first","Sell programs","Diagnose disease"], answer:1, explain:"It flags who should get medical review before harder exercise — not to stop people exercising."},
+     {type:"mc", kind:"Assessment", q:"A 'yes' to known cardiovascular disease on screening means:",
+      options:["Start vigorous exercise now","Seek medical clearance/guidance before moderate-vigorous exercise","Ignore it","Refuse to train them"], answer:1, explain:"Known CVD flags a need for medical clearance before stepping up intensity."},
+   ]},
+   { title:"Outcome measures", icon:"📐", qs:[
+     {type:"info", kind:"Assessment", title:"Measure to prove it", body:"Outcome measures prove progress and justify funding. Choose ones that are <b>valid, reliable and matched to the goal</b>, and know the cut-offs and meaningful-change values. <b>Re-test every 4–6 weeks.</b>"},
+     {type:"mc", kind:"Assessment", q:"A good outcome measure is:",
+      options:["Whatever's quickest","Valid, reliable and matched to the goal","Always the 6MWT","Made up on the day"], answer:1, explain:"Pick valid, reliable measures that fit the client's goal."},
+     {type:"mc", kind:"Assessment", q:"Rule-of-thumb re-test interval:",
+      options:["Every session","Every 4–6 weeks","Once a year","Never"], answer:1, explain:"Re-test every 4–6 weeks — progress evidence and motivation."},
+     {type:"mc", kind:"Assessment", q:"A meaningful change on the 6-minute walk test is about:",
+      options:["1–2 m","25–30 m","200 m","No threshold"], answer:1, explain:"~25–30 m is a commonly cited MCID for the 6MWT."},
+   ]},
+   { title:"Risk stratification", icon:"⚖️", qs:[
+     {type:"info", kind:"Assessment", title:"How cautious to be", body:"Risk stratification groups clients (low / moderate / high) by their likelihood of an adverse event, based on disease, signs/symptoms and risk factors. It guides how much <b>medical involvement and monitoring</b> you need — higher risk means more caution, lower starting doses, and possibly medical clearance or supervision."},
+     {type:"mc", kind:"Assessment", q:"Risk stratification mainly helps you decide:",
+      options:["What to charge","The caution, monitoring and clearance a client needs","Their goals","Their postcode"], answer:1, explain:"It sets how much medical input/monitoring and caution are needed."},
+     {type:"mc", kind:"Assessment", q:"Higher-risk clients generally need:",
+      options:["To start at maximal intensity","More monitoring/medical input and a lower starting dose","No screening","Less care"], answer:1, explain:"Higher risk → start lower, monitor more, involve medical as needed."},
+     {type:"mc", kind:"Assessment", q:"Signs/symptoms suggestive of CVD during screening should prompt:",
+      options:["Vigorous testing immediately","Medical review before vigorous exercise","Nothing","A refund"], answer:1, explain:"Suggestive signs/symptoms → medical review before vigorous exercise."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 13 · Meds & Exercise 💊", sub:"How common drugs change the response", color:"var(--red)", shadow:"var(--red-d)", icon:"💊",
+  lessons:[
+   { title:"Cardiac meds", icon:"❤️", qs:[
+     {type:"info", kind:"Medications", title:"Drugs that change the cardiac response", body:"<b>Beta-blockers</b> blunt heart rate → use RPE. <b>GTN</b> (a nitrate) for angina should be on hand. <b>Diuretics</b> can cause dehydration, electrolyte issues and post-exercise BP drops. <b>ACE inhibitors / vasodilators</b> can cause dizziness and post-exercise hypotension — cool down gradually and rise slowly."},
+     {type:"mc", kind:"Medications", q:"With a client on beta-blockers, gauge intensity using:",
+      options:["Target heart rate","RPE (HR is blunted)","Max HR","Pace only"], answer:1, explain:"Beta-blockers blunt HR — anchor to RPE/talk test."},
+     {type:"mc", kind:"Medications", q:"GTN (glyceryl trinitrate) spray is for:",
+      options:["Asthma","Angina — should be available; unrelieved angina is an emergency","Diabetes","Cramps"], answer:1, explain:"GTN is for angina; angina unrelieved by rest/GTN → 000."},
+     {type:"mc", kind:"Medications", q:"Diuretics raise the risk of:",
+      options:["Weight gain","Dehydration, electrolyte issues and post-exercise BP drops","High blood sugar","Better hydration"], answer:1, explain:"Diuretics deplete fluid/electrolytes — watch hydration and post-exercise hypotension."},
+   ]},
+   { title:"Metabolic & respiratory meds", icon:"🫁", qs:[
+     {type:"info", kind:"Medications", title:"Glucose, lungs & sedation", body:"<b>Insulin &amp; sulfonylureas</b> can cause hypoglycaemia with exercise (have carbs, check BGL); <b>metformin</b> alone rarely does. <b>Bronchodilators</b> (relievers like salbutamol) should be on hand for asthma/COPD — a reliever ~15 min pre-exercise can prevent EIB. <b>Sedatives/opioids</b> can impair balance, alertness and the perception of effort and pain."},
+     {type:"mc", kind:"Medications", q:"Which diabetes medications most raise hypoglycaemia risk?",
+      options:["Metformin alone","Insulin and sulfonylureas","Statins","Antacids"], answer:1, explain:"Insulin and sulfonylureas can cause hypos; metformin alone rarely does."},
+     {type:"mc", kind:"Medications", q:"For an asthmatic, a reliever ~15 min before exercise can:",
+      options:["Cause an attack","Prevent exercise-induced bronchoconstriction","Replace warm-up","Lower blood sugar"], answer:1, explain:"A pre-exercise reliever helps prevent EIB."},
+     {type:"mc", kind:"Medications", q:"Opioids and sedatives can:",
+      options:["Improve balance","Impair balance, alertness and effort/pain perception","Boost performance","Have no effect"], answer:1, explain:"They blunt alertness, balance and the sense of effort/pain — train with caution."},
+     {type:"mc", kind:"Medications", q:"Statins are worth noting because they can occasionally cause:",
+      options:["Muscle aches (myalgia) — report unusual muscle pain","Better sleep","Weight loss","Faster sprints"], answer:0, explain:"Statin-related muscle aches occur in some people — flag unusual/persistent muscle pain."},
+   ]},
+  ]
+ },
 ];
 
 /* ============================================================
