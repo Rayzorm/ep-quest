@@ -821,6 +821,65 @@ const UNITS = [
    ]},
   ]
  },
+ {
+  title:"Unit 10 · Growing the Practice 📊", sub:"Pricing, structure & getting clients", color:"var(--teal)", shadow:"var(--teal-d)", icon:"📊",
+  lessons:[
+   { title:"Pricing & rates", icon:"💵", qs:[
+     {type:"info", kind:"Business Growth", title:"What to actually charge", body:"Your headline session fee is <b>not</b> what you earn per hour. Your <b>effective rate</b> must absorb <b>travel, notes, admin and no-shows</b> — often 30–50% of your time is non-billable, especially in mobile/NDIS work. Price so the whole day is profitable, not just the billed hour. <i>(This is exactly what your EP-Brain business calculators model.)</i>"},
+     {type:"mc", kind:"Business Growth", q:"Your real earning rate per hour depends on:",
+      options:["Only the session fee","Travel, notes, admin and no-shows eating into billable time","The weather","Nothing"], answer:1, explain:"Non-billable time means your effective rate is well below the headline fee."},
+     {type:"mc", kind:"Business Growth", q:"'Bulk-billing' a Medicare session means:",
+      options:["Charging extra","Accepting the Medicare rebate as full payment (no out-of-pocket)","Billing in bulk monthly","Refusing Medicare"], answer:1, explain:"Bulk-billing = the rebate is the full fee; the client pays no gap."},
+     {type:"mc", kind:"Business Growth", q:"A 'gap' fee is:",
+      options:["A discount","The out-of-pocket difference between your fee and the Medicare rebate","A late fee","A tax"], answer:1, explain:"The gap is what the client pays on top of the Medicare rebate."},
+   ]},
+   { title:"Structure & protection", icon:"🛡️", qs:[
+     {type:"info", kind:"Business Growth", title:"Set up & cover", body:"To invoice in Australia you need an <b>ABN</b>. Most start as a <b>sole trader</b>; a <b>company (Pty Ltd)</b> can offer limited liability and tax flexibility but costs more to run. Either way, hold <b>professional indemnity</b> and <b>public liability</b> insurance. <i>(General info, not financial or legal advice — see an accountant.)</i>"},
+     {type:"mc", kind:"Business Growth", q:"Before invoicing clients in Australia, you need an:",
+      options:["ABN","Gym licence","Passport","Company car"], answer:0, explain:"An ABN (Australian Business Number) is needed to invoice."},
+     {type:"multi", kind:"Tap all an EP should hold", q:"Which insurances should an EP practice carry?",
+      options:["Professional indemnity","Public liability","Pet insurance","Phone screen cover"], answers:[0,1], explain:"Professional indemnity and public liability are the core covers for practice."},
+     {type:"mc", kind:"Business Growth", q:"A company (Pty Ltd) structure mainly offers:",
+      options:["No paperwork","Limited liability and a separate legal entity (with more cost/admin)","Free money","Automatic clients"], answer:1, explain:"Limited liability and tax flexibility — but more cost and admin than a sole trader. Get advice."},
+   ]},
+   { title:"Marketing & models", icon:"📣", qs:[
+     {type:"info", kind:"Business Growth", title:"Referrals are the engine", body:"For a clinical EP, the strongest marketing is <b>referrer relationships</b> — GPs (CDM), NDIS support coordinators, other allied health — backed by good outcomes. A brief <b>report back to the referring GP</b> builds trust and repeat referrals. Service <b>models</b> (RACF/aged care, NDIS mobile, clinic) each have different economics — travel and admin hit mobile work hardest."},
+     {type:"mc", kind:"Business Growth", q:"The most powerful marketing for a clinical EP is usually:",
+      options:["Paid ads only","Strong referrer relationships + good outcomes","A flashy logo","Discount codes"], answer:1, explain:"Referrers (GPs, coordinators) plus demonstrated outcomes drive a clinical caseload."},
+     {type:"mc", kind:"Business Growth", q:"Sending a short report back to the referring GP:",
+      options:["Wastes their time","Builds trust and drives repeat referrals","Breaks privacy","Is illegal"], answer:1, explain:"Closing the loop with referrers builds trust and a steady referral stream."},
+     {type:"mc", kind:"Business Growth", q:"Which service model is most affected by travel & admin time?",
+      options:["Clinic-based","Mobile / in-home NDIS work","Telehealth","None"], answer:1, explain:"Mobile/in-home work carries the most non-billable travel and admin — price for it."},
+   ]},
+  ]
+ },
+ {
+  title:"Unit 11 · Prescription 101 🏋️", sub:"The fundamentals behind every program", color:"var(--gold)", shadow:"var(--gold-d)", icon:"🏋️",
+  lessons:[
+   { title:"FITT & principles", icon:"🧱", qs:[
+     {type:"info", kind:"Prescription", title:"FITT", body:"Exercise prescription is built on <b>FITT</b>: <b>F</b>requency, <b>I</b>ntensity, <b>T</b>ime, <b>T</b>ype — often extended to <b>FITT-VP</b> (adding Volume and Progression). Adjust one element at a time: the same 'one lever' idea as the EP Brain's progression step."},
+     {type:"mc", kind:"Prescription", q:"FITT stands for:",
+      options:["Fast, Intense, Tough, Timed","Frequency, Intensity, Time, Type","Fitness In Ten Tries","Force, Impact, Tempo, Tension"], answer:1, explain:"Frequency, Intensity, Time, Type (FITT-VP adds Volume & Progression)."},
+     {type:"mc", kind:"Prescription", q:"To keep adapting, you must apply:",
+      options:["Progressive overload","Total rest","The same workout forever","Maximal effort always"], answer:0, explain:"Progressive overload — gradually increasing the demand — drives ongoing adaptation."},
+     {type:"mc", kind:"Prescription", q:"Specificity means:",
+      options:["All exercise is equal","Adaptations are specific to the stimulus you train","Only cardio counts","Genetics decide everything"], answer:1, explain:"You adapt to what you train — train the quality you want to improve."},
+     {type:"mc", kind:"Prescription", q:"Reversibility ('use it or lose it') means:",
+      options:["Gains are permanent","Gains are lost when training stops","You can't lose fitness","Rest is pointless"], answer:1, explain:"Detraining reverses adaptations — consistency matters."},
+   ]},
+   { title:"Intensity & safety", icon:"🎚️", qs:[
+     {type:"info", kind:"Prescription", title:"Dosing intensity", body:"Gauge intensity with <b>%HRmax / heart-rate reserve (Karvonen)</b>, the <b>talk test</b>, or <b>RPE</b> (Borg). When HR is unreliable — beta-blockers, deconditioning, pacemakers, autonomic issues — use <b>RPE and the talk test</b>. Always include a <b>warm-up and cool-down</b>, especially with cardiac and older clients."},
+     {type:"mc", kind:"Prescription", q:"When heart rate is unreliable, gauge intensity with:",
+      options:["Guesswork","RPE and the talk test","Max HR test","Step count only"], answer:1, explain:"RPE and the talk test work when HR can't be trusted (e.g. beta-blockers)."},
+     {type:"mc", kind:"Prescription", q:"Talk test — able to talk but not sing ≈:",
+      options:["Light intensity","Moderate intensity","Maximal intensity","Rest"], answer:1, explain:"Talking but not singing is roughly moderate intensity."},
+     {type:"mc", kind:"Prescription", q:"Warm-up and cool-down matter because they:",
+      options:["Waste time","Prepare the body, reduce injury/cardiac risk and aid recovery","Only help flexibility","Are optional always"], answer:1, explain:"They ease the body in and out of effort — important for cardiac and older clients."},
+     {type:"mc", kind:"Prescription", q:"Individualisation means:",
+      options:["One program for everyone","Tailoring the dose to the person's condition, goals and capacity","Copying elite athletes","Ignoring the client"], answer:1, explain:"Match the prescription to the individual — the heart of the EP Brain framework."},
+   ]},
+  ]
+ },
 ];
 
 /* ============================================================
