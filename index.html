@@ -1894,7 +1894,8 @@ const qarea=document.getElementById('qarea');
 const foot=document.getElementById('foot');
 let checkBtn=document.getElementById('checkBtn');
 const barFill=document.getElementById('barFill');
-const liveHearts=document.getElementById('liveHearts');
+let liveHeartsBox=document.querySelector('.ptop .hearts');
+let liveHearts=document.getElementById('liveHearts');
 
 function startLesson(ui,li){
   beginLesson(UNITS[ui].lessons[li].qs.slice(), ui+'-'+li, 'quest');
@@ -1907,9 +1908,11 @@ function startCourse(ci){
   c.qs.forEach(q=>steps.push(q));
   beginLesson(steps, 'L'+ci, 'learn');
 }
-function beginLesson(steps, doneKey, mode){
-  cur={steps, doneKey, mode, i:0, hearts:5, wrong:0, total:steps.length,
+function beginLesson(steps, doneKey, mode, opts){
+  opts=opts||{};
+  cur={steps, doneKey, mode, i:0, hearts:opts.exam?9999:5, wrong:0, total:steps.length,
        scoredTotal:steps.filter(s=>s.type!=='info').length||1,
+       exam:!!opts.exam, examStart:opts.exam?Date.now():0,
        sel:null, matchState:null, answered:false};
   player.classList.add('show');
   renderQ();
@@ -1922,7 +1925,8 @@ function quitLesson(){ if(confirm('Quit this lesson? Progress in it will be lost
 
 function renderQ(){
   cur.answered=false; cur.sel=null; cur.matchState=null;
-  liveHearts.textContent=cur.hearts;
+  if(cur.exam){ liveHeartsBox.textContent='📝 '+(cur.i+1)+'/'+cur.total; }
+  else { liveHeartsBox.innerHTML='❤️<span id="liveHearts"></span>'; liveHearts=document.getElementById('liveHearts'); liveHearts.textContent=cur.hearts; }
   barFill.style.width=((cur.i)/cur.total*100)+'%';
   const q=cur.steps[cur.i];
   // Teaching card (Learn mode): no scoring, no hearts — just read and continue
@@ -2067,7 +2071,7 @@ function onCheck(){
 
 function showFeedback(correct, explain){
   if(correct){ ding(); }
-  else { cur.wrong++; cur.hearts--; liveHearts.textContent=cur.hearts; buzz(); }
+  else { cur.wrong++; if(!cur.exam){ cur.hearts--; liveHearts.textContent=cur.hearts; } buzz(); }
   foot.className='foot '+(correct?'ok':'bad');
   foot.innerHTML=`
     <div class="fb">
@@ -2094,7 +2098,7 @@ function completeLesson(){
   barFill.style.width='100%';
   const key=cur.doneKey;
   const firstTime=!S.done[key];
-  if(key!=='practice'){ S.done[key]=true; S.crowns[key]=(S.crowns[key]||0)+1; }
+  if(key!=='practice' && key!=='exam'){ S.done[key]=true; S.crowns[key]=(S.crowns[key]||0)+1; }
   // XP — accuracy is over scored questions only (teaching cards don't count)
   const acc=Math.round((cur.scoredTotal-cur.wrong)/cur.scoredTotal*100);
   let gained = firstTime?15:6;
@@ -2116,7 +2120,17 @@ function completeLesson(){
   document.getElementById('rwStreak').textContent=S.streak;
   document.getElementById('rwXp').textContent=S.xp;
   document.getElementById('rwAcc').textContent=acc+'%';
-  document.getElementById('doneSub').textContent = cur.wrong===0 ? "Flawless — that's the reflex firing." : "Solid rep. Onward.";
+  if(cur.exam){
+    const correct=cur.scoredTotal-cur.wrong, secs=Math.round((Date.now()-cur.examStart)/1000), pass=acc>=70;
+    if(pass){ S.examPassed=true; save(); }
+    document.getElementById('trophyIcon').textContent = pass?'🎓':'📚';
+    document.getElementById('doneTitle').textContent = pass?'Exam passed! 🎉':'Exam complete';
+    document.getElementById('doneSub').textContent = 'Score '+correct+'/'+cur.scoredTotal+' ('+acc+'%) — '+(pass?'PASS ✅':'below 70%')+' · '+Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0');
+  } else {
+    document.getElementById('trophyIcon').textContent='🏆';
+    document.getElementById('doneTitle').textContent='Lesson complete!';
+    document.getElementById('doneSub').textContent = cur.wrong===0 ? "Flawless — that's the reflex firing." : "Solid rep. Onward.";
+  }
   document.getElementById('done').classList.add('show');
   fanfare();
   confettiBurst();
@@ -2212,6 +2226,7 @@ const ACH=[
  {ic:'🏆',n:'Grandmaster',d:'Finish every Quest lesson',t:()=>questDoneCount()>=questTotalCount()},
  {ic:'🧠',n:'Brainiac',d:'Answer 100 questions',t:()=>(S.answered||0)>=100},
  {ic:'💯',n:'Sharpshooter',d:'Answer 50 correctly',t:()=>(S.correctCount||0)>=50},
+ {ic:'🎓',n:'Graduate',d:'Pass the Final Exam (70%+)',t:()=>!!S.examPassed},
 ];
 function renderProfile(){
   refreshHud();
@@ -2236,6 +2251,7 @@ function renderProfile(){
       <div class="stat2"><b>📚 ${learnCount()}/${LEARN.length}</b><span>Conditions</span></div>
     </div>
     <button class="btn blue" style="margin:6px 16px 4px;width:calc(100% - 32px)" onclick="startPractice()">⚡ Quick Practice — 7 mixed questions</button>
+    <button class="btn green" style="margin:0 16px 4px;width:calc(100% - 32px)" onclick="startExam()">🎓 Final Exam · 25 questions</button>
     ${missedN?`<button class="btn red" style="margin:0 16px 4px;width:calc(100% - 32px)" onclick="startReview()">🔁 Review your misses (${missedN})</button>`:''}
     <div class="ach-h">🏅 Achievements <span>${earned}/${ACH.length}</span></div>
     <div class="achgrid">`;
@@ -2252,6 +2268,11 @@ function allScored(){
 function startPractice(){
   const pool=allScored().sort(()=>Math.random()-.5).slice(0,7);
   beginLesson(pool, 'practice', 'you');
+}
+function startExam(){
+  const pool=allScored().sort(()=>Math.random()-.5).slice(0,25);
+  if(pool.length<5){ toast('Not enough questions yet.'); return; }
+  beginLesson(pool, 'exam', 'you', {exam:true});
 }
 function startReview(){
   const ids=S.missed||{};
