@@ -1264,10 +1264,12 @@ function renderQ(){
   if(q.scn) html+=`<div class="qscn">${q.scn}</div>`;
   html+=`<div class="qtext">${q.q}</div>`;
   if(q.type==='mc'||q.type==='multi'){
+    // shuffle the DISPLAY order; data-i keeps the original index so answer-checking is unchanged
+    const order=q.options.map((_,i)=>i).sort(()=>Math.random()-0.5);
     html+=`<div class="opts" id="opts">`;
-    q.options.forEach((o,idx)=>{
-      const k=String.fromCharCode(65+idx);
-      html+=`<button class="opt" data-i="${idx}" onclick="pick(${idx})"><span class="key">${k}</span><span>${o}</span></button>`;
+    order.forEach((origIdx,pos)=>{
+      const k=String.fromCharCode(65+pos);
+      html+=`<button class="opt" data-i="${origIdx}" onclick="pick(${origIdx})"><span class="key">${k}</span><span>${q.options[origIdx]}</span></button>`;
     });
     html+=`</div>`;
   } else if(q.type==='match'){
